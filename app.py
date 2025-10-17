@@ -14,23 +14,49 @@ st.set_page_config(
 st.title("⚽ Ex-Soviet Republics Football Ranking System")
 st.markdown("---")
 
+# Country code to full name mapping
+COUNTRY_NAMES = {
+    'UKR': 'Ukraine',
+    'RUS': 'Russia',
+    'AZE': 'Azerbaijan',
+    'UZB': 'Uzbekistan',
+    'ARM': 'Armenia',
+    'MDA': 'Moldova',
+    'LVA': 'Latvia',
+    'KAZ': 'Kazakhstan',
+    'GEO': 'Georgia',
+    'KGZ': 'Kyrgyzstan',
+    'EST': 'Estonia',
+    'LTU': 'Lithuania',
+    'BLR': 'Belarus',
+    'TKM': 'Turkmenistan',
+    'TJK': 'Tajikistan'
+}
+
 # Load data
 @st.cache_data
 def load_data():
-    # Read the Excel file
-    df = pd.read_excel('Ex Soviet Ranking - finished 24 25.xlsx', sheet_name=0)
+    # Read the Excel file without header
+    df = pd.read_excel('Ex Soviet Ranking - finished 24 25.xlsx', sheet_name=0, header=None)
     
-    # Extract nation rankings (rows 3-17, based on the structure)
-    nations_df = df.iloc[2:17].copy()
+    # Extract nation rankings (rows 3-17)
+    nations_df = df.iloc[3:18].copy()
     
-    # Set proper column names
-    nations_df.columns = df.iloc[1]
+    # Assign column names based on the structure
+    nations_df.columns = [
+        'Rank', 'League', 'Country', 'CCode',
+        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25',
+        'Total', 'Total2', 'col13', 'col14', 'col15', 'col16', 'col17', 'col18',
+        'FIFA1', 'FIFA2', 'FIFA3', 'FIFA4', 'FIFA5', 'FIFA6', 'FIFA7', 'FIFA8',
+        'Total3', 'Total4'
+    ]
     
-    # Clean up the dataframe
-    nations_df = nations_df[['Country', '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total', 'Total2', 'Total3', 'Total4']].copy()
+    # Get country codes and map to full names
+    nations_df['Country'] = nations_df['CCode'].map(COUNTRY_NAMES)
     
     # Convert numeric columns
-    numeric_cols = ['2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total', 'Total2', 'Total3', 'Total4']
+    numeric_cols = ['2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 
+                    'Total', 'Total2', 'Total3', 'Total4']
     for col in numeric_cols:
         nations_df[col] = pd.to_numeric(nations_df[col], errors='coerce')
     
@@ -67,10 +93,8 @@ try:
     display_df.columns = ['Country', 'UEFA Coefficient', 'AFC Coefficient', 'FIFA Ranking', 'Final Score']
     
     # Format numbers
-    display_df['UEFA Coefficient'] = display_df['UEFA Coefficient'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
-    display_df['AFC Coefficient'] = display_df['AFC Coefficient'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
-    display_df['FIFA Ranking'] = display_df['FIFA Ranking'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
-    display_df['Final Score'] = display_df['Final Score'].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
+    for col in ['UEFA Coefficient', 'AFC Coefficient', 'FIFA Ranking', 'Final Score']:
+        display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
     
     st.dataframe(display_df, use_container_width=True, hide_index=False)
     
@@ -181,3 +205,5 @@ try:
 except Exception as e:
     st.error(f"Error loading data: {str(e)}")
     st.info("Please make sure the Excel file is in the same directory as this script.")
+    import traceback
+    st.code(traceback.format_exc())
