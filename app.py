@@ -18,7 +18,7 @@ st.markdown("---")
 @st.cache_data
 def load_data():
     # Read the Excel file
-    df = pd.read_excel('Ex Soviet Ranking neu - neue formel finished 24 25.xlsx', sheet_name=0)
+    df = pd.read_excel('Ex Soviet Ranking - finished 24 25.xlsx', sheet_name=0)
     
     # Extract nation rankings (rows 3-17, based on the structure)
     nations_df = df.iloc[2:17].copy()
