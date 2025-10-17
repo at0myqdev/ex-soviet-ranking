@@ -114,17 +114,24 @@ try:
     
     # Format numbers to match Excel (2 decimal places where applicable) - ROBUST VERSION
     def format_value(x):
-        if pd.isna(x):
+        # Handle Series or array-like objects
+        if isinstance(x, pd.Series):
+            return x.iloc[0] if len(x) > 0 else ""
+    
+        # Check for NaN/None
+        if x is None or (isinstance(x, float) and pd.isna(x)):
             return ""
+    
+        # Try to convert to float and format
         try:
             val = float(x)
-            return f"{val:.2f}" if val != 0 else "0.00"
+            return f"{val:.2f}"
         except (ValueError, TypeError):
             return ""
     
     for col in display_df.columns:
         if col not in ['Rank', 'Country']:
-            display_df[col] = display_df[col].apply(format_value)
+            display_df[col] = display_df[col].map(format_value)
     
     st.dataframe(display_df, use_container_width=True, hide_index=True)
     
