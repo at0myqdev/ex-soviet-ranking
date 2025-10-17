@@ -102,14 +102,14 @@ try:
         'Total4'
     ]].copy()
     
-    # Rename columns to match Excel headers
+    # Rename columns to match Excel headers - WITH UNIQUE NAMES
     display_df.columns = [
         'Rank', 'Country',
-        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total',
-        '2018', '2019', '2021', '2022', '2023/24', '2024/25', 'Total.1',
-        '20.09.2018', '19.09.2019', '17.09.2020', '16.09.2021',
-        '25.08.2022', '21.09.2023', '19.09.2024', '18.09.2025', 'Total.2',
-        'Total.3'
+        'UEFA 2018/19', 'UEFA 2019/20', 'UEFA 2020/21', 'UEFA 2021/22', 'UEFA 2022/23', 'UEFA 2023/24', 'UEFA 2024/25', 'UEFA Total',
+        'AFC 2018', 'AFC 2019', 'AFC 2021', 'AFC 2022', 'AFC 2023/24', 'AFC 2024/25', 'AFC Total',
+        'FIFA 20.09.2018', 'FIFA 19.09.2019', 'FIFA 17.09.2020', 'FIFA 16.09.2021',
+        'FIFA 25.08.2022', 'FIFA 21.09.2023', 'FIFA 19.09.2024', 'FIFA 18.09.2025', 'FIFA Total',
+        'Final Score'
     ]
     
     # Format numbers to match Excel (2 decimal places where applicable) - ROBUST VERSION
