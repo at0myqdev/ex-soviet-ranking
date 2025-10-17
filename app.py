@@ -112,10 +112,19 @@ try:
         'Total4'
     ]
     
-    # Format numbers to match Excel (2 decimal places where applicable)
+    # Format numbers to match Excel (2 decimal places where applicable) - ROBUST VERSION
+    def format_value(x):
+        if pd.isna(x):
+            return ""
+        try:
+            val = float(x)
+            return f"{val:.2f}" if val != 0 else "0.00"
+        except (ValueError, TypeError):
+            return ""
+    
     for col in display_df.columns:
         if col not in ['Rank', 'Country']:
-            display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) and x != 0 else ("0.00" if pd.notna(x) else ""))
+            display_df[col] = display_df[col].apply(format_value)
     
     st.dataframe(display_df, use_container_width=True, hide_index=True)
     
