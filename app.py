@@ -37,7 +37,7 @@ COUNTRY_NAMES = {
 @st.cache_data
 def load_data():
     # Read the Excel file without header
-    df = pd.read_excel('Ex Soviet Ranking neu - neue formel finished 24 25.xlsx', sheet_name=0, header=None)
+    df = pd.read_excel('Ex Soviet Ranking - finished 24 25.xlsx', sheet_name=0, header=None)
     
     # Extract nation rankings (rows 3-17)
     nations_df = df.iloc[3:18].copy()
