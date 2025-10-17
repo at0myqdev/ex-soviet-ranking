@@ -48,10 +48,10 @@ def load_data():
     # Assign column names based on the actual structure
     nations_df.columns = [
         'Rank', 'League', 'Country', 'CCode',
-        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25',
-        'Total_UEFA', '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC',
-        'Total_AFC', 'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
-        'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025',
+        'UEFA_2018_19', 'UEFA_2019_20', 'UEFA_2020_21', 'UEFA_2021_22', 'UEFA_2022_23', 'UEFA_2023_24', 'UEFA_2024_25',
+        'Total_UEFA', 'AFC_2018', 'AFC_2019', 'AFC_2021', 'AFC_2022', 'AFC_2023_24', 'AFC_2024_25',
+        'Total_AFC', 'FIFA_20_09_2018', 'FIFA_19_09_2019', 'FIFA_17_09_2020', 'FIFA_16_09_2021',
+        'FIFA_25_08_2022', 'FIFA_21_09_2023', 'FIFA_19_09_2024', 'FIFA_18_09_2025',
         'Total_FIFA', 'Total4'
     ]
     
@@ -59,10 +59,10 @@ def load_data():
     nations_df['Country_Name'] = nations_df['CCode'].map(COUNTRY_NAMES)
     
     # Convert numeric columns
-    numeric_cols = ['Rank', '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25',
-                    'Total_UEFA', '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC',
-                    'Total_AFC', 'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
-                    'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025',
+    numeric_cols = ['Rank', 'UEFA_2018_19', 'UEFA_2019_20', 'UEFA_2020_21', 'UEFA_2021_22', 'UEFA_2022_23', 'UEFA_2023_24', 'UEFA_2024_25',
+                    'Total_UEFA', 'AFC_2018', 'AFC_2019', 'AFC_2021', 'AFC_2022', 'AFC_2023_24', 'AFC_2024_25',
+                    'Total_AFC', 'FIFA_20_09_2018', 'FIFA_19_09_2019', 'FIFA_17_09_2020', 'FIFA_16_09_2021',
+                    'FIFA_25_08_2022', 'FIFA_21_09_2023', 'FIFA_19_09_2024', 'FIFA_18_09_2025',
                     'Total_FIFA', 'Total4']
     
     for col in numeric_cols:
@@ -95,10 +95,10 @@ try:
     # Create display dataframe with all columns from Excel
     display_df = df[[
         'Rank', 'CCode', 
-        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total_UEFA',
-        '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC', 'Total_AFC',
-        'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
-        'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025', 'Total_FIFA',
+        'UEFA_2018_19', 'UEFA_2019_20', 'UEFA_2020_21', 'UEFA_2021_22', 'UEFA_2022_23', 'UEFA_2023_24', 'UEFA_2024_25', 'Total_UEFA',
+        'AFC_2018', 'AFC_2019', 'AFC_2021', 'AFC_2022', 'AFC_2023_24', 'AFC_2024_25', 'Total_AFC',
+        'FIFA_20_09_2018', 'FIFA_19_09_2019', 'FIFA_17_09_2020', 'FIFA_16_09_2021',
+        'FIFA_25_08_2022', 'FIFA_21_09_2023', 'FIFA_19_09_2024', 'FIFA_18_09_2025', 'Total_FIFA',
         'Total4'
     ]].copy()
     
@@ -106,10 +106,10 @@ try:
     display_df.columns = [
         'Rank', 'Country',
         '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total',
-        '2018', '2019', '2021', '2022', '2023/24', '2024/25', 'Total2',
+        '2018', '2019', '2021', '2022', '2023/24', '2024/25', 'Total.1',
         '20.09.2018', '19.09.2019', '17.09.2020', '16.09.2021',
-        '25.08.2022', '21.09.2023', '19.09.2024', '18.09.2025', 'Total3',
-        'Total4'
+        '25.08.2022', '21.09.2023', '19.09.2024', '18.09.2025', 'Total.2',
+        'Total.3'
     ]
     
     # Format numbers to match Excel (2 decimal places where applicable) - ROBUST VERSION
@@ -117,18 +117,18 @@ try:
         # Handle Series or array-like objects
         if isinstance(x, pd.Series):
             return x.iloc[0] if len(x) > 0 else ""
-    
+
         # Check for NaN/None
         if x is None or (isinstance(x, float) and pd.isna(x)):
             return ""
-    
+
         # Try to convert to float and format
         try:
             val = float(x)
             return f"{val:.2f}"
         except (ValueError, TypeError):
             return ""
-    
+
     for col in display_df.columns:
         if col not in ['Rank', 'Country']:
             display_df[col] = display_df[col].map(format_value)
@@ -193,13 +193,14 @@ try:
     
     with tab3:
         # Line chart for UEFA coefficients over time
-        uefa_cols = ['2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25']
+        uefa_cols = ['UEFA_2018_19', 'UEFA_2019_20', 'UEFA_2020_21', 'UEFA_2021_22', 'UEFA_2022_23', 'UEFA_2023_24', 'UEFA_2024_25']
+        uefa_labels = ['2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25']
         
         fig = go.Figure()
         
         for idx, row in df.iterrows():
             fig.add_trace(go.Scatter(
-                x=uefa_cols,
+                x=uefa_labels,
                 y=[row[col] for col in uefa_cols],
                 mode='lines+markers',
                 name=row['Country_Name']
