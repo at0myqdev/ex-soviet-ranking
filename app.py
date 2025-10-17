@@ -36,33 +36,37 @@ COUNTRY_NAMES = {
 # Load data
 @st.cache_data
 def load_data():
-    # Read the Excel file without header
+    # Read the Excel file
     df = pd.read_excel('Ex Soviet Ranking - finished 24 25.xlsx', sheet_name=0, header=None)
     
-    # Extract nation rankings (rows 3-17)
-    nations_df = df.iloc[3:18].copy()
+    # Extract nation rankings (rows 3-17, index 2-16)
+    nations_df = df.iloc[2:17].copy()
     
-    # Assign column names based on the structure
+    # Reset index
+    nations_df = nations_df.reset_index(drop=True)
+    
+    # Assign column names based on the actual structure
     nations_df.columns = [
         'Rank', 'League', 'Country', 'CCode',
         '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25',
-        'Total', 'Total2', 'col13', 'col14', 'col15', 'col16', 'col17', 'col18',
-        'FIFA1', 'FIFA2', 'FIFA3', 'FIFA4', 'FIFA5', 'FIFA6', 'FIFA7', 'FIFA8',
-        'Total3', 'Total4'
+        'Total_UEFA', '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC',
+        'Total_AFC', 'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
+        'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025',
+        'Total_FIFA', 'Total4'
     ]
     
-    # Get country codes and map to full names
-    nations_df['Country'] = nations_df['CCode'].map(COUNTRY_NAMES)
+    # Get country names from codes
+    nations_df['Country_Name'] = nations_df['CCode'].map(COUNTRY_NAMES)
     
     # Convert numeric columns
-    numeric_cols = ['2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 
-                    'Total', 'Total2', 'Total3', 'Total4']
+    numeric_cols = ['Rank', '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25',
+                    'Total_UEFA', '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC',
+                    'Total_AFC', 'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
+                    'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025',
+                    'Total_FIFA', 'Total4']
+    
     for col in numeric_cols:
         nations_df[col] = pd.to_numeric(nations_df[col], errors='coerce')
-    
-    # Sort by Total4 (final score)
-    nations_df = nations_df.sort_values('Total4', ascending=False).reset_index(drop=True)
-    nations_df.index = nations_df.index + 1  # Start ranking from 1
     
     return nations_df
 
@@ -77,26 +81,43 @@ try:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("🥇 1st Place", df.iloc[0]['Country'], f"{df.iloc[0]['Total4']:.2f} pts")
+        st.metric("🥇 1st Place", df.iloc[0]['Country_Name'], f"{df.iloc[0]['Total4']:.2f} pts")
     with col2:
-        st.metric("🥈 2nd Place", df.iloc[1]['Country'], f"{df.iloc[1]['Total4']:.2f} pts")
+        st.metric("🥈 2nd Place", df.iloc[1]['Country_Name'], f"{df.iloc[1]['Total4']:.2f} pts")
     with col3:
-        st.metric("🥉 3rd Place", df.iloc[2]['Country'], f"{df.iloc[2]['Total4']:.2f} pts")
+        st.metric("🥉 3rd Place", df.iloc[2]['Country_Name'], f"{df.iloc[2]['Total4']:.2f} pts")
     
     st.markdown("---")
     
-    # Full ranking table
-    st.subheader("📊 Complete Rankings")
+    # Full ranking table - exactly as in Excel
+    st.subheader("📊 Complete Rankings Table")
     
-    # Create display dataframe
-    display_df = df[['Country', 'Total', 'Total2', 'Total3', 'Total4']].copy()
-    display_df.columns = ['Country', 'UEFA Coefficient', 'AFC Coefficient', 'FIFA Ranking', 'Final Score']
+    # Create display dataframe with all columns from Excel
+    display_df = df[[
+        'Rank', 'CCode', 
+        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total_UEFA',
+        '2018_AFC', '2019_AFC', '2021_AFC', '2022_AFC', '2023/24_AFC', '2024/25_AFC', 'Total_AFC',
+        'FIFA_20.09.2018', 'FIFA_19.09.2019', 'FIFA_17.09.2020', 'FIFA_16.09.2021',
+        'FIFA_25.08.2022', 'FIFA_21.09.2023', 'FIFA_19.09.2024', 'FIFA_18.09.2025', 'Total_FIFA',
+        'Total4'
+    ]].copy()
     
-    # Format numbers
-    for col in ['UEFA Coefficient', 'AFC Coefficient', 'FIFA Ranking', 'Final Score']:
-        display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) else "0.00")
+    # Rename columns to match Excel headers
+    display_df.columns = [
+        'Rank', 'Country',
+        '2018/19', '2019/20', '2020/21', '2021/22', '2022/23', '2023/24', '2024/25', 'Total',
+        '2018', '2019', '2021', '2022', '2023/24', '2024/25', 'Total2',
+        '20.09.2018', '19.09.2019', '17.09.2020', '16.09.2021',
+        '25.08.2022', '21.09.2023', '19.09.2024', '18.09.2025', 'Total3',
+        'Total4'
+    ]
     
-    st.dataframe(display_df, use_container_width=True, hide_index=False)
+    # Format numbers to match Excel (2 decimal places where applicable)
+    for col in display_df.columns:
+        if col not in ['Rank', 'Country']:
+            display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}" if pd.notna(x) and x != 0 else ("0.00" if pd.notna(x) else ""))
+    
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
     
     st.markdown("---")
     
@@ -109,10 +130,10 @@ try:
         # Bar chart of final scores
         fig = px.bar(
             df, 
-            x='Country', 
+            x='Country_Name', 
             y='Total4',
             title='Final Scores by Country',
-            labels={'Total4': 'Final Score', 'Country': 'Country'},
+            labels={'Total4': 'Final Score', 'Country_Name': 'Country'},
             color='Total4',
             color_continuous_scale='Blues'
         )
@@ -125,22 +146,22 @@ try:
         
         fig.add_trace(go.Bar(
             name='UEFA Coefficient',
-            x=df['Country'],
-            y=df['Total'],
+            x=df['Country_Name'],
+            y=df['Total_UEFA'],
             marker_color='#1f77b4'
         ))
         
         fig.add_trace(go.Bar(
             name='AFC Coefficient',
-            x=df['Country'],
-            y=df['Total2'],
+            x=df['Country_Name'],
+            y=df['Total_AFC'],
             marker_color='#ff7f0e'
         ))
         
         fig.add_trace(go.Bar(
             name='FIFA Ranking',
-            x=df['Country'],
-            y=df['Total3'],
+            x=df['Country_Name'],
+            y=df['Total_FIFA'],
             marker_color='#2ca02c'
         ))
         
@@ -165,7 +186,7 @@ try:
                 x=uefa_cols,
                 y=[row[col] for col in uefa_cols],
                 mode='lines+markers',
-                name=row['Country']
+                name=row['Country_Name']
             ))
         
         fig.update_layout(
@@ -187,10 +208,10 @@ try:
     with col1:
         st.markdown("""
         **Calculation Method:**
-        - **UEFA Coefficient**: Weighted average of last 5 years
-        - **AFC Coefficient**: Weighted average for Asian leagues
-        - **FIFA Ranking**: Average of historical FIFA rankings
-        - **Final Score (Total4)**: Combined score from all three components
+        - **UEFA Coefficient**: Sum of coefficients from 2018/19 to 2024/25
+        - **AFC Coefficient**: Sum of coefficients from 2018 to 2024/25
+        - **FIFA Ranking**: Average of FIFA rankings from 2018 to 2025
+        - **Final Score (Total4)**: Combined weighted score from all three components
         """)
     
     with col2:
