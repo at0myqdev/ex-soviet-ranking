@@ -76,6 +76,7 @@ Where:
   
 
 Nation Coefficient = (UEFA Total × 0.3) + (AFC Total × 0.1) + (FIFA Total × 0.6)
+
 **Note**: The weights here are purely chosen by vibes as this looks the fairest or else Uzbekistan would have 6+ clubs in the top league
   
 **Component Calculations:**  
