@@ -49,22 +49,27 @@ def load_and_calculate_data():
         league_df[col] = pd.to_numeric(league_df[col], errors='coerce').fillna(0)
     
     # Calculate total_uefa (last 5 UEFA seasons with weights)
+    # Take the LAST 5 columns: 2020/21, 2021/22, 2022/23, 2023/24, 2024/25
+    # Weights: 0.6 (oldest) to 1.0 (newest)
     weights = [0.6, 0.7, 0.8, 0.9, 1.0]
+    uefa_last_5 = uefa_cols[-5:]  # Last 5 UEFA columns
+    
     league_df['total'] = league_df.apply(
-        lambda row: sum([row[uefa_cols[i]] * weights[i] for i in range(min(5, len(uefa_cols)))]) / 5,
+        lambda row: sum([row[uefa_last_5[i]] * weights[i] for i in range(len(uefa_last_5))]) / 5,
         axis=1
     )
     
     # Calculate total_afc (last 5 AFC seasons with weights)
-    # Take the last 5 available AFC columns
-    afc_last_5 = afc_cols[-5:] if len(afc_cols) >= 5 else afc_cols
+    afc_last_5 = afc_cols[-5:]
+    
     league_df['total2'] = league_df.apply(
         lambda row: sum([row[afc_last_5[i]] * weights[i] for i in range(len(afc_last_5))]) / 5,
         axis=1
     )
     
     # Calculate total_fifa (last 5 FIFA rankings with weights)
-    fifa_last_5 = fifa_cols[-5:] if len(fifa_cols) >= 5 else fifa_cols
+    fifa_last_5 = fifa_cols[-5:]
+    
     league_df['total3'] = league_df.apply(
         lambda row: sum([row[fifa_last_5[i]] * weights[i] for i in range(len(fifa_last_5))]) / 5,
         axis=1
