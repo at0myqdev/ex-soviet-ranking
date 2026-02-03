@@ -238,7 +238,7 @@ def generate_flag_bar(present_country_codes):
             html += f"<span style='opacity: 1.0; font-size: 1.2rem; cursor: help;' title='{COUNTRY_NAMES[code]}'>{flag}</span>"
         else:
             # Inactive flag (grayed out)
-            html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented'>{flag}</span>"
+            html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented: {COUNTRY_NAMES[code]}'>{flag}</span>"
     html += "</div>"
     return html
 
@@ -846,8 +846,7 @@ try:
         PointAVG = Average(top 5 seasons) × Nation Coefficient
         ```
         
-        **Countries Included:** - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 
-        - 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
+        **Countries Included:** - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
         
         *15 Ex-Soviet Republics*
         """)
