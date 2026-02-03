@@ -540,15 +540,15 @@ try:
                 height=min(600, len(display) * 35 + 38),
                 column_config={
                     "Pos": st.column_config.NumberColumn(
-                        "Pos",
-                        help="Position in league",
-                        width="small",
-                        format="%d"
+                    "Pos",
+                    help="Position in league",
+                    width="small",
+                    format="%d"
                     ),
                     "Status": st.column_config.TextColumn(
-                        "Status",
-                        help="Promotion/Relegation zone",
-                        width="medium"
+                    "Status",
+                    help="Promotion/Relegation zone",
+                    width="medium"
                     )
                 }
             )
@@ -589,19 +589,19 @@ try:
                 st.markdown("""
                 ```
                     ⚽ PREMIER LEAGUE
-                         (20 clubs)
-                    ─────────────────
-                           ↕
+                    (20 clubs)
+                    ────
+                    ↕
                     🏆 CHAMPIONSHIP
-                         (24 clubs)
-                    ─────────────────
-                           ↕
+                    (24 clubs)
+                    ────
+                    ↕
                     🥉 LEAGUE ONE
-                         (24 clubs)
-                    ─────────────────
-                           ↕
+                    (24 clubs)
+                    ────
+                    ↕
                     📋 LEAGUE TWO
-                         (24 clubs)
+                    (24 clubs)
                 ```
                 """)
             
@@ -615,12 +615,12 @@ try:
                     ("League Two", league_two)
                 ], 1):
                     for _, row in df.iterrows():
-                        country_dist.append({
-                            'League': name,
-                            'Tier': tier,
-                            'Country': row['country_name'],
-                            'Club': row['team']
-                        })
+                    country_dist.append({
+                    'League': name,
+                    'Tier': tier,
+                    'Country': row['country_name'],
+                    'Club': row['team']
+                    })
                 
                 country_dist_df = pd.DataFrame(country_dist)
                 
@@ -684,9 +684,9 @@ try:
                     st.markdown(f"**{name}**")
                     country_counts = df['country_code'].value_counts().head(3)
                     for country, count in country_counts.items():
-                        flag = FLAG_EMOJI.get(country, '')
-                        country_name = COUNTRY_NAMES.get(country, country)
-                        st.markdown(f"{flag} {country_name}: **{count}** clubs")
+                    flag = FLAG_EMOJI.get(country, '')
+                    country_name = COUNTRY_NAMES.get(country, country)
+                    st.markdown(f"{flag} {country_name}: **{count}** clubs")
         
         st.markdown("---")
         
@@ -751,10 +751,7 @@ try:
         # Filter clubs for selected country
         country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
         country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
-        
-        # Add overall position from the full ranking
-        country_clubs = country_clubs.reset_index(drop=True)
-        country_clubs['overall_position'] = country_clubs.index + 1
+        # overall_position is already correctly set in club_results_df
         
         # Get nation coefficient for this country
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values
