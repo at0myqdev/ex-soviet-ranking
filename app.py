@@ -264,28 +264,37 @@ try:
     # Main ranking table
     st.header("🏆 Current Nation Rankings (2024/25)")
     
-    # Display metrics for all nations in ONE row
-    # Use as many columns as there are countries
-    cols = st.columns(len(league_df))
+    # Use HTML Flexbox instead of st.columns to allow proper sizing and fitting in one row
+    rankings_html = """
+    <div style="display: flex; flex-direction: row; justify-content: space-between; overflow-x: auto; padding-bottom: 15px; gap: 10px;">
+    """
     
     for idx, row in league_df.iterrows():
-        with cols[idx]:
-            rank = idx + 1
-            # Add medal/position emoji
-            if rank == 1:
-                prefix = "🥇"
-            elif rank == 2:
-                prefix = "🥈"
-            elif rank == 3:
-                prefix = "🥉"
-            else:
-                prefix = f"#{rank}"
+        rank = idx + 1
+        # Add medal/position
+        if rank == 1:
+            rank_display = "🥇"
+            border_color = "#FFD700" # Gold
+        elif rank == 2:
+            rank_display = "🥈"
+            border_color = "#C0C0C0" # Silver
+        elif rank == 3:
+            rank_display = "🥉"
+            border_color = "#CD7F32" # Bronze
+        else:
+            rank_display = f"#{rank}"
+            border_color = "transparent"
             
-            # Use a slightly more compact layout for the row
-            st.markdown(f"**{prefix}**")
-            st.markdown(f"{row['flag']}")
-            st.caption(f"{row['total4']:.2f}")
-
+        rankings_html += f"""
+        <div style="text-align: center; flex: 1; min-width: 60px;">
+            <div style="font-weight: bold; font-size: 1rem; margin-bottom: 5px;">{rank_display}</div>
+            <div style="font-size: 3rem; line-height: 1.1; margin-bottom: 5px; cursor: help;" title="{row['country_name']}">{row['flag']}</div>
+            <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.4f}</div>
+        </div>
+        """
+        
+    rankings_html += "</div>"
+    st.markdown(rankings_html, unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -898,7 +907,7 @@ try:
         ClubCoef = Average(top 5 seasons) × Nation Coefficient
         ```
         
-        **Countries Included:** - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
+        **Countries Included:** 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
         
         *15 Ex-Soviet Republics*
         """)
