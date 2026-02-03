@@ -615,10 +615,10 @@ try:
                 ], 1):
                     for _, row in df.iterrows():
                     country_dist.append({
-                    'League': name,
-                    'Tier': tier,
-                    'Country': row['country_name'],
-                    'Club': row['team']
+                        'League': name,
+                        'Tier': tier,
+                        'Country': row['country_name'],
+                        'Club': row['team']
                     })
                 
                 country_dist_df = pd.DataFrame(country_dist)
