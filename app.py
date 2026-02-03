@@ -197,9 +197,14 @@ def calculate_club_coefficients(league_df):
     
     club_df['row_coefficient'] = club_df.apply(calculate_row_coefficient, axis=1)
     
+    # Clean team names to ensure consistency
+    if 'team' in club_df.columns:
+        club_df['team'] = club_df['team'].astype(str).str.strip()
+
     # Calculate ClubCoef (formerly PointAVG) for each club
     club_results = []
     
+    # REVERTED: Back to grouping by ['country_code', 'team_code'] as requested to inspect duplicates
     for (country_code, team_code), group in club_df.groupby(['country_code', 'team_code']):
         # Sort by year descending and take top 5
         top_5 = group.nlargest(5, 'year')
@@ -892,7 +897,11 @@ try:
         """)
     
     with col2:
-        st.markdown("""
+        # Sort flags alphabetically by country name for display
+        sorted_country_codes = sorted(COUNTRY_NAMES.keys(), key=lambda x: COUNTRY_NAMES[x])
+        sorted_flags_string = " ".join([FLAG_EMOJI[code] for code in sorted_country_codes])
+        
+        st.markdown(f"""
         ### ⚽ ClubCoef Calculation
         
         **For each club season:**
@@ -906,7 +915,7 @@ try:
         ```
         
         **Countries Included:**<br>
-        🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯<br>
+        {sorted_flags_string}<br>
         *15 Ex-Soviet Republics*
         """, unsafe_allow_html=True)
     
@@ -922,6 +931,19 @@ try:
     
     # Debug section (optional)
     with st.expander("🔍 Debug Information"):
+        st.subheader("Potential Duplicates (Same name, different code)")
+        # Check for duplicates
+        dup_check = club_results_df['team'].value_counts()
+        duplicates = dup_check[dup_check > 1]
+        
+        if not duplicates.empty:
+            st.warning(f"Found {len(duplicates)} clubs appearing multiple times:")
+            for name, count in duplicates.items():
+                 st.write(f"**{name}**: {count} entries")
+                 st.dataframe(club_results_df[club_results_df['team'] == name])
+        else:
+            st.success("No duplicates found with exact name match.")
+
         st.subheader("Sample League Data")
         st.dataframe(league_df.head())
         
