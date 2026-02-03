@@ -586,7 +586,7 @@ try:
             
             with col1:
                 st.markdown("""
-                ```
+                
                     ⚽ PREMIER LEAGUE
                     (20 clubs)
                     ────
@@ -601,7 +601,7 @@ try:
                     ↕
                     📋 LEAGUE TWO
                     (24 clubs)
-                ```
+                
                 """)
             
             with col2:
@@ -614,12 +614,12 @@ try:
                     ("League Two", league_two)
                 ], 1):
                     for _, row in df.iterrows():
-                    country_dist.append({
-                        'League': name,
-                        'Tier': tier,
-                        'Country': row['country_name'],
-                        'Club': row['team']
-                    })
+                        country_dist.append({
+                            'League': name,
+                            'Tier': tier,
+                            'Country': row['country_name'],
+                            'Club': row['team']
+                        })
                 
                 country_dist_df = pd.DataFrame(country_dist)
                 
@@ -966,9 +966,9 @@ try:
           - Same weighting system
         
         **Final Formula:**
-        ```
+        
         Nation Coefficient = (UEFA×0.3 + AFC×0.1 + FIFA×0.6) / 100
-        ```
+        
         """)
     
     with col2:
@@ -981,9 +981,9 @@ try:
         - Group multiplier: 1.0 (championship) or 0.913 (relegation)
         
         **Final PointAVG:**
-        ```
+        
         PointAVG = Average(top 5 seasons) × Nation Coefficient
-        ```
+        
         
         **Countries Included:** 
         - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 
