@@ -524,7 +524,8 @@ try:
             
             if tier == 1:
                 # Premier League: Bottom 3 relegated, European spots
-                display.loc[display.index[0], 'Status'] = '⭐ Champions'
+                display.loc[display.index[0:4], 'Status'] = '⭐ Champions League'
+                display.loc[display.index[4:6], 'Status'] = '🌍 Europa League'
                 display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
             elif tier in [2, 3, 4]:
                 # Championship, League One, League Two: Same structure
@@ -586,7 +587,7 @@ try:
             
             with col1:
                 st.markdown("""
-                
+                ```
                     ⚽ PREMIER LEAGUE
                     (20 clubs)
                     ────
@@ -601,7 +602,7 @@ try:
                     ↕
                     📋 LEAGUE TWO
                     (24 clubs)
-                
+                ```
                 """)
             
             with col2:
@@ -751,9 +752,7 @@ try:
         country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
         country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
         
-        # Add overall position from the full ranking
-        country_clubs = country_clubs.reset_index(drop=True)
-        country_clubs['overall_position'] = country_clubs.index + 1
+        # overall_position is already in club_results_df - don't overwrite it!
         
         # Get nation coefficient for this country
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values
@@ -966,9 +965,9 @@ try:
           - Same weighting system
         
         **Final Formula:**
-        
+        ```
         Nation Coefficient = (UEFA×0.3 + AFC×0.1 + FIFA×0.6) / 100
-        
+        ```
         """)
     
     with col2:
@@ -981,9 +980,9 @@ try:
         - Group multiplier: 1.0 (championship) or 0.913 (relegation)
         
         **Final PointAVG:**
-        
+        ```
         PointAVG = Average(top 5 seasons) × Nation Coefficient
-        
+        ```
         
         **Countries Included:** 
         - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 
