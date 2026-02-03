@@ -197,14 +197,13 @@ def calculate_club_coefficients(league_df):
     
     club_df['row_coefficient'] = club_df.apply(calculate_row_coefficient, axis=1)
     
-    # Clean team names to ensure consistency
+    # Clean team names to ensure consistency (remove extra spaces)
     if 'team' in club_df.columns:
         club_df['team'] = club_df['team'].astype(str).str.strip()
 
     # Calculate ClubCoef (formerly PointAVG) for each club
     club_results = []
     
-    # REVERTED: Back to grouping by ['country_code', 'team_code'] as requested to inspect duplicates
     for (country_code, team_code), group in club_df.groupby(['country_code', 'team_code']):
         # Sort by year descending and take top 5
         top_5 = group.nlargest(5, 'year')
@@ -258,8 +257,6 @@ def generate_flag_bar(present_country_codes):
 
 # Load the data
 try:
-    st.cache_data.clear()
-    
     league_df = load_and_calculate_data()
     club_results_df, club_df = calculate_club_coefficients(league_df)
     
@@ -272,7 +269,6 @@ try:
     st.header("🏆 Current Nation Rankings (2024/25)")
     
     # Use HTML Flexbox instead of st.columns to allow proper sizing and fitting in one row
-    # Important: No indentation at the start of the string to avoid code block rendering
     rankings_html = """<div style="display: flex; flex-direction: row; justify-content: space-between; overflow-x: auto; padding-bottom: 15px; gap: 10px;">"""
     
     for idx, row in league_df.iterrows():
@@ -295,7 +291,7 @@ try:
         <div style="text-align: center; flex: 1; min-width: 60px;">
             <div style="font-weight: bold; font-size: 1rem; margin-bottom: 5px;">{rank_display}</div>
             <div style="font-size: 3rem; line-height: 1.1; margin-bottom: 5px; cursor: help;" title="{row['country_name']}">{row['flag']}</div>
-            <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.4f}</div>
+            <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.2f}</div>
         </div>"""
         
     rankings_html += "</div>"
@@ -933,19 +929,6 @@ try:
     
     # Debug section (optional)
     with st.expander("🔍 Debug Information"):
-        st.subheader("Potential Duplicates (Same name, different code)")
-        # Check for duplicates
-        dup_check = club_results_df['team'].value_counts()
-        duplicates = dup_check[dup_check > 1]
-        
-        if not duplicates.empty:
-            st.warning(f"Found {len(duplicates)} clubs appearing multiple times:")
-            for name, count in duplicates.items():
-                 st.write(f"**{name}**: {count} entries")
-                 st.dataframe(club_results_df[club_results_df['team'] == name])
-        else:
-            st.success("No duplicates found with exact name match.")
-
         st.subheader("Sample League Data")
         st.dataframe(league_df.head())
         
