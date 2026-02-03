@@ -188,7 +188,7 @@ def calculate_club_coefficients(league_df):
     
     club_df['row_coefficient'] = club_df.apply(calculate_row_coefficient, axis=1)
     
-    # Calculate PointAVG for each club
+    # Calculate ClubCoef (formerly PointAVG) for each club
     club_results = []
     
     for (country_code, team_code), group in club_df.groupby(['country_code', 'team_code']):
@@ -203,7 +203,7 @@ def calculate_club_coefficients(league_df):
             nation_coef = league_df[league_df['country_code'] == country_code]['total4'].values
             nation_coef = nation_coef[0] if len(nation_coef) > 0 else 0
             
-            # Calculate PointAVG
+            # Calculate ClubCoef
             point_avg = avg_coefficient * nation_coef
             
             club_results.append({
@@ -319,7 +319,7 @@ try:
     st.markdown("---")
     
     # Club Rankings with flags
-    st.header("🏅 Top Club Rankings (by PointAVG)")
+    st.header("🏅 Top Club Rankings (by ClubCoef)")
     
     # Top 20 clubs
     top_clubs = club_results_df.head(20).copy()
@@ -334,7 +334,7 @@ try:
             st.markdown(f"### {club['flag']}")
             st.markdown(f"**#{idx+1}**")
             st.markdown(f"**{club['team']}**")
-            st.metric("PointAVG", f"{club['point_avg']:.4f}")
+            st.metric("ClubCoef", f"{club['point_avg']:.4f}")
             st.caption(club['country_name'])
     
     st.markdown("---")
@@ -343,9 +343,9 @@ try:
     st.subheader("📋 Top 20 Clubs")
     
     display_clubs = top_clubs[['flag', 'team', 'country_name', 'point_avg']].copy()
-    display_clubs.columns = ['🏴', 'Club', 'Country', 'PointAVG']
+    display_clubs.columns = ['🏴', 'Club', 'Country', 'ClubCoef']
     display_clubs.insert(0, 'Rank', range(1, len(display_clubs) + 1))
-    display_clubs['PointAVG'] = display_clubs['PointAVG'].apply(lambda x: f"{x:.4f}")
+    display_clubs['ClubCoef'] = display_clubs['ClubCoef'].apply(lambda x: f"{x:.4f}")
     
     st.dataframe(
         display_clubs, 
@@ -470,8 +470,8 @@ try:
             top_15,
             x='team',
             y='point_avg',
-            title='Top 15 Clubs by PointAVG',
-            labels={'point_avg': 'PointAVG', 'team': 'Club'},
+            title='Top 15 Clubs by ClubCoef',
+            labels={'point_avg': 'ClubCoef', 'team': 'Club'},
             color='point_avg',
             color_continuous_scale='Reds',
             text='flag',
@@ -524,7 +524,7 @@ try:
                 
                 # Metric: Avg Points
                 avg_points = league_df_tier['point_avg'].mean()
-                st.caption(f"Avg Pts: {avg_points:.4f}")
+                st.caption(f"Avg Coef: {avg_points:.2f}")
                 
                 # Add league position within tier
                 league_df_tier = league_df_tier.copy()
@@ -533,8 +533,8 @@ try:
                 # Create display dataframe
                 # Removed 'country_name' column as requested, retained flag
                 display = league_df_tier[['league_pos', 'flag', 'team', 'point_avg']].copy()
-                display.columns = ['Pos', '🏴', 'Club', 'Pts']
-                display['Pts'] = display['Pts'].apply(lambda x: f"{x:.4f}")
+                display.columns = ['Pos', '🏴', 'Club', 'Coef']
+                display['Coef'] = display['Coef'].apply(lambda x: f"{x:.2f}")
                 
                 # Add visual indicators for promotion/relegation zones
                 display['Status'] = ''
@@ -561,24 +561,19 @@ try:
                     column_config={
                         "Pos": st.column_config.NumberColumn(
                             "Pos",
-                            width="small",
                             format="%d"
                         ),
                         "🏴": st.column_config.TextColumn(
-                            "🏴",
-                            width="small"
+                            "🏴"
                         ),
                         "Club": st.column_config.TextColumn(
-                            "Club",
-                            width="medium"
+                            "Club"
                         ),
-                        "Pts": st.column_config.TextColumn(
-                            "Pts",
-                            width="small"
+                        "Coef": st.column_config.TextColumn(
+                            "Coef"
                         ),
                          "Status": st.column_config.TextColumn(
-                            "Status",
-                            width="small"
+                            "Status"
                         )
                     }
                 )
@@ -645,7 +640,7 @@ try:
         
         # Prepare display dataframe
         display_country = country_clubs[['national_rank', 'team', 'point_avg', 'overall_position']].copy()
-        display_country.columns = ['National Rank', 'Club', 'PointAVG', 'Overall Rank']
+        display_country.columns = ['National Rank', 'Club', 'ClubCoef', 'Overall Rank']
         
         # Add league tier information
         def get_league_tier(position):
@@ -663,10 +658,10 @@ try:
         display_country['League'] = display_country['Overall Rank'].apply(get_league_tier)
         
         # Format numbers
-        display_country['PointAVG'] = display_country['PointAVG'].apply(lambda x: f"{x:.4f}")
+        display_country['ClubCoef'] = display_country['ClubCoef'].apply(lambda x: f"{x:.4f}")
         
         # Reorder columns
-        display_country = display_country[['National Rank', 'Club', 'League', 'Overall Rank', 'PointAVG']]
+        display_country = display_country[['National Rank', 'Club', 'League', 'Overall Rank', 'ClubCoef']]
         
         st.dataframe(
             display_country,
@@ -726,7 +721,7 @@ try:
                 x='team',
                 y='point_avg',
                 title=f'Top 10 Clubs - {country_name}',
-                labels={'point_avg': 'PointAVG', 'team': 'Club'},
+                labels={'point_avg': 'ClubCoef', 'team': 'Club'},
                 color='point_avg',
                 color_continuous_scale='Reds'
             )
@@ -739,7 +734,7 @@ try:
         # Comparison with other countries
         st.subheader("🆚 Comparison with Other Countries")
         
-        # Calculate average PointAVG per country for top 5 clubs
+        # Calculate average ClubCoef per country for top 5 clubs
         country_comparison = []
         for country_code in countries_with_clubs:
             country_top5 = club_results_df[club_results_df['country_code'] == country_code].head(5)
@@ -748,11 +743,11 @@ try:
                 country_comparison.append({
                     'Country': COUNTRY_NAMES.get(country_code, country_code),
                     'Flag': FLAG_EMOJI.get(country_code, ''),
-                    'Avg Top 5 PointAVG': avg_top5,
+                    'Avg Top 5 ClubCoef': avg_top5,
                     'Total Clubs': len(club_results_df[club_results_df['country_code'] == country_code])
                 })
         
-        comparison_df = pd.DataFrame(country_comparison).sort_values('Avg Top 5 PointAVG', ascending=False)
+        comparison_df = pd.DataFrame(country_comparison).sort_values('Avg Top 5 ClubCoef', ascending=False)
         
         # Highlight selected country
         comparison_df['Highlight'] = comparison_df['Country'] == country_name
@@ -760,10 +755,10 @@ try:
         fig = px.bar(
             comparison_df,
             y='Country',
-            x='Avg Top 5 PointAVG',
+            x='Avg Top 5 ClubCoef',
             orientation='h',
-            title='Average PointAVG of Top 5 Clubs by Country',
-            labels={'Avg Top 5 PointAVG': 'Average PointAVG (Top 5 Clubs)'},
+            title='Average ClubCoef of Top 5 Clubs by Country',
+            labels={'Avg Top 5 ClubCoef': 'Average ClubCoef (Top 5 Clubs)'},
             color='Highlight',
             color_discrete_map={True: '#ff4b4b', False: '#1f77b4'},
             hover_data=['Total Clubs']
@@ -784,8 +779,8 @@ try:
                 - **Clubs in League One**: {len(country_clubs[(country_clubs['overall_position'] > 44) & (country_clubs['overall_position'] <= 68)])}
                 - **Clubs in League Two**: {len(country_clubs[(country_clubs['overall_position'] > 68) & (country_clubs['overall_position'] <= 92)])}
                 - **Best Club**: {country_clubs.iloc[0]['team']} (#{country_clubs.iloc[0]['overall_position']} overall)
-                - **Highest PointAVG**: {country_clubs.iloc[0]['point_avg']:.4f}
-                - **Average PointAVG**: {country_clubs['point_avg'].mean():.4f}
+                - **Highest ClubCoef**: {country_clubs.iloc[0]['point_avg']:.4f}
+                - **Average ClubCoef**: {country_clubs['point_avg'].mean():.4f}
                 """)
             
             with col2:
@@ -834,16 +829,16 @@ try:
     
     with col2:
         st.markdown("""
-        ### ⚽ Club PointAVG Calculation
+        ### ⚽ ClubCoef Calculation
         
         **For each club season:**
         - League only: `(league_points / league_games) × league_tier^-0.95`
         - With group phase: Average of league and group calculations
         - Group multiplier: 1.0 (championship) or 0.913 (relegation)
         
-        **Final PointAVG:**
+        **Final ClubCoef:**
         ```
-        PointAVG = Average(top 5 seasons) × Nation Coefficient
+        ClubCoef = Average(top 5 seasons) × Nation Coefficient
         ```
         
         **Countries Included:** - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
