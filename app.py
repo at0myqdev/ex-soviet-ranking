@@ -293,7 +293,7 @@ try:
         <div style="text-align: center; flex: 1; min-width: 60px;">
             <div style="font-weight: bold; font-size: 1rem; margin-bottom: 5px;">{rank_display}</div>
             <div style="font-size: 3rem; line-height: 1.1; margin-bottom: 5px; cursor: help;" title="{row['country_name']}">{row['flag']}</div>
-            <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.2f}</div>
+            <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.4f}</div>
         </div>"""
         
     rankings_html += "</div>"
