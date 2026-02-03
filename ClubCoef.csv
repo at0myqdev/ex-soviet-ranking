@@ -110,7 +110,7 @@ UKR;Metalist 1925 Kharkiv;M25;2020/21;2020;2;30;56;;;
 UKR;Metalist 1925 Kharkiv;M25;2021/22;2021;1;18;19;;;
 UKR;Metalist 1925 Kharkiv;M25;2022/23;2022;1;30;32;;;
 UKR;Metalist 1925 Kharkiv;M25;2023/24;2023;1;30;23;;;
-UKR;Metalist 1925 Kharkiv;M26;2024/25;2024;2;16;29;1;6;11
+UKR;Metalist 1925 Kharkiv;M25;2024/25;2024;2;16;29;1;6;11
 UKR;FK Kryvbas Kryvyi Rig;KRV;2018/19;2018;3;27;51;;;
 UKR;FK Kryvbas Kryvyi Rig;KRV;2019/20;2019;3;20;33;;;
 UKR;FK Kryvbas Kryvyi Rig;KRV;2020/21;2020;3;22;50;;;
@@ -2506,14 +2506,14 @@ TJK;FC Dushanbe-83;D83;2020;2020;1;18;20;;;
 TJK;FC Dushanbe-83;D83;2021;2021;1;27;18;;;
 TJK;FC Dushanbe-83;D83;2022;2022;2;22;21;;;
 TJK;FC Dushanbe-83;D83;2023;2023;2;22;12;;;
-TJK;FC Dushanbe-83;D84;2024;2024;2;24;23;;;
-TJK;FC Hosilot Farkhor    ;HSF;2018;2018;0;0;0;;;
-TJK;FC Hosilot Farkhor    ;HSF;2019;2019;3;22;36;;;
-TJK;FC Hosilot Farkhor    ;HSF;2020;2020;2;22;30;;;
-TJK;FC Hosilot Farkhor    ;HSF;2021;2021;2;22;49;;;
-TJK;FC Hosilot Farkhor    ;HSF;2022;2022;2;22;59;;;
-TJK;FC Hosilot Farkhor    ;HSF;2023;2023;1;18;20;2;4;5
-TJK;FC Hosilot Farkhor    ;HSF;2024;2024;1;22;24;;;
+TJK;FC Dushanbe-83;D83;2024;2024;2;24;23;;;
+TJK;FC Hosilot Farkhor;HSF;2018;2018;0;0;0;;;
+TJK;FC Hosilot Farkhor;HSF;2019;2019;3;22;36;;;
+TJK;FC Hosilot Farkhor;HSF;2020;2020;2;22;30;;;
+TJK;FC Hosilot Farkhor;HSF;2021;2021;2;22;49;;;
+TJK;FC Hosilot Farkhor;HSF;2022;2022;2;22;59;;;
+TJK;FC Hosilot Farkhor;HSF;2023;2023;1;18;20;2;4;5
+TJK;FC Hosilot Farkhor;HSF;2024;2024;1;22;24;;;
 TJK;Panjsher Balkh;PJR;2018;2018;1;21;18;;;
 TJK;Panjsher Balkh;PJR;2019;2019;1;21;11;;;
 TJK;Panjsher Balkh;PJR;2020;2020;2;22;41;;;
@@ -2542,20 +2542,6 @@ KGZ;FC Dordoi Bishkek;DDB;2021;2021;1;28;62;;;
 KGZ;FC Dordoi Bishkek;DDB;2022;2022;1;27;44;;;
 KGZ;FC Dordoi Bishkek;DDB;2023;2023;1;27;50;;;
 KGZ;FC Dordoi Bishkek;DDB;2024;2024;1;27;59;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2018;2018;1;28;55;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2019;2019;1;28;35;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2020;2020;1;14;23;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2021;2021;1;28;59;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2022;2022;1;27;60;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2023;2023;1;27;57;;;
-KGZ;"FC Abdysh-Ata
-Kant";AAK;2024;2024;1;27;69;;;
 KGZ;FC Alay Osh;ALO;2018;2018;1;28;60;;;
 KGZ;FC Alay Osh;ALO;2019;2019;1;28;62;;;
 KGZ;FC Alay Osh;ALO;2020;2020;1;14;23;;;
@@ -2626,3 +2612,4 @@ KGZ;OshSU Aldier;OSA;2021;2021;0;0;0;;;
 KGZ;OshSU Aldier;OSA;2022;2022;0;0;0;;;
 KGZ;OshSU Aldier;OSA;2023;2023;1;27;23;;;
 KGZ;OshSU Aldier;OSA;2024;2024;1;27;25;;;
+
