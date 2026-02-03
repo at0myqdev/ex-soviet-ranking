@@ -214,6 +214,9 @@ def calculate_club_coefficients(league_df):
     club_results_df = pd.DataFrame(club_results)
     club_results_df = club_results_df.sort_values('point_avg', ascending=False).reset_index(drop=True)
     
+    # Add overall position to all clubs
+    club_results_df['overall_position'] = range(1, len(club_results_df) + 1)
+    
     # Add country names and flags
     club_results_df['country_name'] = club_results_df['country_code'].map(COUNTRY_NAMES)
     club_results_df['flag'] = club_results_df['country_code'].map(FLAG_EMOJI)
@@ -495,7 +498,6 @@ try:
         
         # Prepare league data
         all_clubs = club_results_df.copy()
-        all_clubs['position'] = range(1, len(all_clubs) + 1)
         
         # Define league tiers: 20 + 24 + 24 + 24
         premier_league = all_clubs.iloc[0:20].copy()
@@ -750,6 +752,10 @@ try:
         country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
         country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
         
+        # Add overall position from the full ranking
+        country_clubs = country_clubs.reset_index(drop=True)
+        country_clubs['overall_position'] = country_clubs.index + 1
+        
         # Get nation coefficient for this country
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values
         nation_coef = nation_coef[0] if len(nation_coef) > 0 else 0
@@ -769,7 +775,7 @@ try:
             st.metric("Total Clubs", len(country_clubs))
         
         with col4:
-            clubs_in_top_20 = len(country_clubs[country_clubs['position'] <= 20])
+            clubs_in_top_20 = len(country_clubs[country_clubs['overall_position'] <= 20])
             st.metric("Clubs in Premier League", clubs_in_top_20)
         
         st.markdown("---")
@@ -778,7 +784,7 @@ try:
         st.subheader(f"🏆 All Clubs from {country_name}")
         
         # Prepare display dataframe
-        display_country = country_clubs[['national_rank', 'team', 'point_avg', 'position']].copy()
+        display_country = country_clubs[['national_rank', 'team', 'point_avg', 'overall_position']].copy()
         display_country.columns = ['National Rank', 'Club', 'PointAVG', 'Overall Rank']
         
         # Add league tier information
@@ -832,7 +838,7 @@ try:
         
         with col1:
             # Distribution across leagues
-            league_distribution = country_clubs['position'].apply(get_league_tier).value_counts().reset_index()
+            league_distribution = country_clubs['overall_position'].apply(get_league_tier).value_counts().reset_index()
             league_distribution.columns = ['League', 'Number of Clubs']
             
             # Define order
@@ -913,11 +919,11 @@ try:
                 st.markdown(f"### {country_flag} {country_name} - Key Metrics")
                 st.markdown(f"""
                 - **Total Clubs**: {len(country_clubs)}
-                - **Clubs in Premier League**: {len(country_clubs[country_clubs['position'] <= 20])}
-                - **Clubs in Championship**: {len(country_clubs[(country_clubs['position'] > 20) & (country_clubs['position'] <= 44)])}
-                - **Clubs in League One**: {len(country_clubs[(country_clubs['position'] > 44) & (country_clubs['position'] <= 68)])}
-                - **Clubs in League Two**: {len(country_clubs[(country_clubs['position'] > 68) & (country_clubs['position'] <= 92)])}
-                - **Best Club**: {country_clubs.iloc[0]['team']} (#{country_clubs.iloc[0]['position']} overall)
+                - **Clubs in Premier League**: {len(country_clubs[country_clubs['overall_position'] <= 20])}
+                - **Clubs in Championship**: {len(country_clubs[(country_clubs['overall_position'] > 20) & (country_clubs['overall_position'] <= 44)])}
+                - **Clubs in League One**: {len(country_clubs[(country_clubs['overall_position'] > 44) & (country_clubs['overall_position'] <= 68)])}
+                - **Clubs in League Two**: {len(country_clubs[(country_clubs['overall_position'] > 68) & (country_clubs['overall_position'] <= 92)])}
+                - **Best Club**: {country_clubs.iloc[0]['team']} (#{country_clubs.iloc[0]['overall_position']} overall)
                 - **Highest PointAVG**: {country_clubs.iloc[0]['point_avg']:.4f}
                 - **Average PointAVG**: {country_clubs['point_avg'].mean():.4f}
                 """)
