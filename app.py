@@ -524,8 +524,7 @@ try:
             
             if tier == 1:
                 # Premier League: Bottom 3 relegated, European spots
-                display.loc[display.index[0:4], 'Status'] = '⭐ Champions League'
-                display.loc[display.index[4:6], 'Status'] = '🌍 Europa League'
+                display.loc[display.index[0], 'Status'] = '⭐ Champions'
                 display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
             elif tier in [2, 3, 4]:
                 # Championship, League One, League Two: Same structure
@@ -615,12 +614,12 @@ try:
                     ("League Two", league_two)
                 ], 1):
                     for _, row in df.iterrows():
-                        country_dist.append({
-                            'League': name,
-                            'Tier': tier,
-                            'Country': row['country_name'],
-                            'Club': row['team']
-                        })
+                    country_dist.append({
+                    'League': name,
+                    'Tier': tier,
+                    'Country': row['country_name'],
+                    'Club': row['team']
+                    })
                 
                 country_dist_df = pd.DataFrame(country_dist)
                 
@@ -684,9 +683,9 @@ try:
                     st.markdown(f"**{name}**")
                     country_counts = df['country_code'].value_counts().head(3)
                     for country, count in country_counts.items():
-                    flag = FLAG_EMOJI.get(country, '')
-                    country_name = COUNTRY_NAMES.get(country, country)
-                    st.markdown(f"{flag} {country_name}: **{count}** clubs")
+                        flag = FLAG_EMOJI.get(country, '')
+                        country_name = COUNTRY_NAMES.get(country, country)
+                        st.markdown(f"{flag} {country_name}: **{count}** clubs")
         
         st.markdown("---")
         
@@ -752,6 +751,10 @@ try:
         country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
         country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
         
+        # Add overall position from the full ranking
+        country_clubs = country_clubs.reset_index(drop=True)
+        country_clubs['overall_position'] = country_clubs.index + 1
+        
         # Get nation coefficient for this country
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values
         nation_coef = nation_coef[0] if len(nation_coef) > 0 else 0
@@ -783,24 +786,20 @@ try:
         display_country = country_clubs[['national_rank', 'team', 'point_avg', 'overall_position']].copy()
         display_country.columns = ['National Rank', 'Club', 'PointAVG', 'Overall Rank']
         
-        # Add league tier information by checking which league the club is in
-        def get_league_tier_from_tables(team_name):
-            # Check Premier League
-            if team_name in premier_league['team'].values:
+        # Add league tier information
+        def get_league_tier(position):
+            if position <= 20:
                 return "🥇 Premier League"
-            # Check Championship
-            elif team_name in championship['team'].values:
+            elif position <= 44:
                 return "🥈 Championship"
-            # Check League One
-            elif team_name in league_one['team'].values:
+            elif position <= 68:
                 return "🥉 League One"
-            # Check League Two
-            elif team_name in league_two['team'].values:
+            elif position <= 92:
                 return "📋 League Two"
             else:
                 return "⬇️ Below League Two"
         
-        display_country['League'] = display_country['Club'].apply(get_league_tier_from_tables)
+        display_country['League'] = display_country['Overall Rank'].apply(get_league_tier)
         
         # Format numbers
         display_country['PointAVG'] = display_country['PointAVG'].apply(lambda x: f"{x:.4f}")
