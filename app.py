@@ -44,6 +44,10 @@ st.markdown("""
     h2 {
         color: #2c3e50;
     }
+    /* Custom CSS for compact tables in 4-column layout */
+    [data-testid="stDataFrame"] {
+        width: 100%;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -222,6 +226,21 @@ def calculate_club_coefficients(league_df):
     club_results_df['flag'] = club_results_df['country_code'].map(FLAG_EMOJI)
     
     return club_results_df, club_df
+
+# Helper function to generate flag HTML with graying out
+def generate_flag_bar(present_country_codes):
+    all_codes = sorted(list(FLAG_EMOJI.keys()))
+    html = "<div style='display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;'>"
+    for code in all_codes:
+        flag = FLAG_EMOJI[code]
+        if code in present_country_codes:
+            # Active flag
+            html += f"<span style='opacity: 1.0; font-size: 1.2rem; cursor: help;' title='{COUNTRY_NAMES[code]}'>{flag}</span>"
+        else:
+            # Inactive flag (grayed out)
+            html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented'>{flag}</span>"
+    html += "</div>"
+    return html
 
 # Load the data
 try:
@@ -470,31 +489,10 @@ try:
         
         # Info box
         st.info("""
-        **League Structure:**
-        - 🥇 **Premier League** (Tier 1): Top 20 clubs
-        - 🥈 **Championship** (Tier 2): Clubs 21-44 (24 clubs)
-        - 🥉 **League One** (Tier 3): Clubs 45-68 (24 clubs)
-        - 📋 **League Two** (Tier 4): Clubs 69-92 (24 clubs)
-        
-        **Promotion/Relegation (All Leagues):**
-        - Top 2: Direct promotion 🔼
-        - 3rd-6th: Playoffs 🎲
-        - Bottom 3: Relegation 🔻
-        
-        *Clubs are ranked by their PointAVG coefficient*
+        **System Overview:**
+        The league system groups the top 92 clubs into 4 tiers.
+        Flags indicate which countries are represented in each league (grayed out flags are not present).
         """)
-        
-        st.markdown("---")
-        
-        # League selection
-        league_option = st.selectbox(
-            "Select League to View:",
-            ["🥇 Premier League (Tier 1)", 
-             "🥈 Championship (Tier 2)", 
-             "🥉 League One (Tier 3)", 
-             "📋 League Two (Tier 4)",
-             "📊 All Leagues Overview"]
-        )
         
         # Prepare league data
         all_clubs = club_results_df.copy()
@@ -505,221 +503,85 @@ try:
         league_one = all_clubs.iloc[44:68].copy()
         league_two = all_clubs.iloc[68:92].copy()
         
-        # Function to display a league table
-        def display_league_table(league_df, league_name, tier, start_pos):
-            st.subheader(f"{league_name}")
-            
-            # Add league position within tier
-            league_df = league_df.copy()
-            league_df['league_pos'] = range(1, len(league_df) + 1)
-            
-            # Create display dataframe
-            display = league_df[['league_pos', 'flag', 'team', 'country_name', 'point_avg']].copy()
-            display.columns = ['Pos', '🏴', 'Club', 'Country', 'PointAVG']
-            display['PointAVG'] = display['PointAVG'].apply(lambda x: f"{x:.4f}")
-            
-            # Add visual indicators for promotion/relegation zones
-            # All leagues: Top 2 auto promotion, 3-6 playoffs, Bottom 3 relegation
-            display['Status'] = ''
-            
-            if tier == 1:
-                # Premier League: Bottom 3 relegated, European spots
-                display.loc[display.index[0:4], 'Status'] = '⭐ Champions League'
-                display.loc[display.index[4:6], 'Status'] = '🌍 Europa League'
-                display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
-            elif tier in [2, 3, 4]:
-                # Championship, League One, League Two: Same structure
-                display.loc[display.index[0:2], 'Status'] = '🔼 Auto Promotion'
-                display.loc[display.index[2:6], 'Status'] = '🎲 Playoffs'
-                display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
-            
-            st.dataframe(
-                display,
-                use_container_width=True,
-                hide_index=True,
-                height=min(600, len(display) * 35 + 38),
-                column_config={
-                    "Pos": st.column_config.NumberColumn(
-                    "Pos",
-                    help="Position in league",
-                    width="small",
-                    format="%d"
-                    ),
-                    "Status": st.column_config.TextColumn(
-                    "Status",
-                    help="Promotion/Relegation zone",
-                    width="medium"
-                    )
-                }
-            )
-            
-            # Statistics
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Total Clubs", len(league_df))
-            with col2:
-                countries = league_df['country_code'].nunique()
-                st.metric("Countries Represented", countries)
-            with col3:
-                avg_points = league_df['point_avg'].mean()
-                st.metric("Avg PointAVG", f"{avg_points:.4f}")
+        # Create columns for side-by-side view (nebeneinander)
+        # Using 4 columns for large displays.
+        league_cols = st.columns(4)
         
-        # Display selected league
-        if league_option == "🥇 Premier League (Tier 1)":
-            display_league_table(premier_league, "🥇 Premier League", 1, 1)
-            
-        elif league_option == "🥈 Championship (Tier 2)":
-            display_league_table(championship, "🥈 Championship", 2, 21)
-            
-        elif league_option == "🥉 League One (Tier 3)":
-            display_league_table(league_one, "🥉 League One", 3, 45)
-            
-        elif league_option == "📋 League Two (Tier 4)":
-            display_league_table(league_two, "📋 League Two", 4, 69)
-            
-        else:  # All Leagues Overview
-            st.markdown("### 📊 Complete League System Overview")
-            
-            # Visual pyramid
-            st.markdown("#### League Pyramid Structure")
-            
-            col1, col2 = st.columns([1, 2])
-            
-            with col1:
-                st.markdown("""
-                ```
-                    ⚽ PREMIER LEAGUE
-                    (20 clubs)
-                    ────
-                    ↕
-                    🏆 CHAMPIONSHIP
-                    (24 clubs)
-                    ────
-                    ↕
-                    🥉 LEAGUE ONE
-                    (24 clubs)
-                    ────
-                    ↕
-                    📋 LEAGUE TWO
-                    (24 clubs)
-                ```
-                """)
-            
-            with col2:
-                # Country distribution across leagues
-                country_dist = []
-                for tier, (name, df) in enumerate([
-                    ("Premier League", premier_league),
-                    ("Championship", championship),
-                    ("League One", league_one),
-                    ("League Two", league_two)
-                ], 1):
-                    for _, row in df.iterrows():
-                        country_dist.append({
-                            'League': name,
-                            'Tier': tier,
-                            'Country': row['country_name'],
-                            'Club': row['team']
-                        })
+        tiers_data = [
+            (premier_league, "🥇 Premier League", 1, 1),
+            (championship, "🥈 Championship", 2, 21),
+            (league_one, "🥉 League One", 3, 45),
+            (league_two, "📋 League Two", 4, 69)
+        ]
+        
+        for idx, (league_df_tier, league_name, tier, start_pos) in enumerate(tiers_data):
+            with league_cols[idx]:
+                st.subheader(f"{league_name}")
                 
-                country_dist_df = pd.DataFrame(country_dist)
+                # Flag visualization (Countries represented)
+                present_countries = league_df_tier['country_code'].unique()
+                st.markdown(generate_flag_bar(present_countries), unsafe_allow_html=True)
                 
-                # Count clubs per country per league
-                country_league_count = country_dist_df.groupby(['League', 'Country']).size().reset_index(name='Clubs')
+                # Metric: Avg Points
+                avg_points = league_df_tier['point_avg'].mean()
+                st.caption(f"Avg Pts: {avg_points:.4f}")
                 
-                fig = px.bar(
-                    country_league_count,
-                    x='League',
-                    y='Clubs',
-                    color='Country',
-                    title='Club Distribution by Country Across Leagues',
-                    barmode='stack',
-                    height=400
+                # Add league position within tier
+                league_df_tier = league_df_tier.copy()
+                league_df_tier['league_pos'] = range(1, len(league_df_tier) + 1)
+                
+                # Create display dataframe
+                # Swapped Club and Country columns as requested
+                display = league_df_tier[['league_pos', 'flag', 'country_name', 'team', 'point_avg']].copy()
+                display.columns = ['Pos', '🏴', 'Country', 'Club', 'PointAVG']
+                display['PointAVG'] = display['PointAVG'].apply(lambda x: f"{x:.4f}")
+                
+                # Add visual indicators for promotion/relegation zones
+                display['Status'] = ''
+                
+                if tier == 1:
+                    # Premier League: Only Champion and Relegation
+                    if display.index[0] == 0:
+                        display.loc[0, 'Status'] = '🏆 Champion'
+                    display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
+                elif tier in [2, 3, 4]:
+                    # Championship, League One, League Two: Same structure
+                    display.loc[display.index[0:2], 'Status'] = '🔼 Promotion'
+                    display.loc[display.index[2:6], 'Status'] = '🎲 Playoffs'
+                    display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
+                
+                # Calculate height to avoid scrolling: (rows + 1 header) * approx_row_height + padding
+                table_height = (len(display) + 1) * 35 + 5
+                
+                st.dataframe(
+                    display,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=table_height,
+                    column_config={
+                        "Pos": st.column_config.NumberColumn(
+                            "Pos",
+                            width="small",
+                            format="%d"
+                        ),
+                        "🏴": st.column_config.TextColumn(
+                            "🏴",
+                            width="small"
+                        ),
+                        "Country": st.column_config.TextColumn(
+                            "Country",
+                            width="small"
+                        ),
+                        "Club": st.column_config.TextColumn(
+                            "Club",
+                            width="medium"
+                        ),
+                         "Status": st.column_config.TextColumn(
+                            "Status",
+                            width="small"
+                        )
+                    }
                 )
-                fig.update_layout(
-                    xaxis_title='League',
-                    yaxis_title='Number of Clubs'
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("---")
-            
-            # Summary table for all leagues
-            st.markdown("#### League Statistics Summary")
-            
-            summary_data = []
-            for tier, (name, df, emoji) in enumerate([
-                ("Premier League", premier_league, "🥇"),
-                ("Championship", championship, "🥈"),
-                ("League One", league_one, "🥉"),
-                ("League Two", league_two, "📋")
-            ], 1):
-                summary_data.append({
-                    'Tier': tier,
-                    'League': f"{emoji} {name}",
-                    'Clubs': len(df),
-                    'Countries': df['country_code'].nunique(),
-                    'Avg PointAVG': f"{df['point_avg'].mean():.4f}",
-                    'Top Club': f"{df.iloc[0]['flag']} {df.iloc[0]['team']}",
-                    'Top PointAVG': f"{df.iloc[0]['point_avg']:.4f}"
-                })
-            
-            summary_df = pd.DataFrame(summary_data)
-            st.dataframe(summary_df, use_container_width=True, hide_index=True)
-            
-            st.markdown("---")
-            
-            # Show which countries dominate which tier
-            st.markdown("#### Country Dominance by League")
-            
-            cols = st.columns(4)
-            
-            for idx, (name, df, col) in enumerate([
-                ("🥇 Premier", premier_league, cols[0]),
-                ("🥈 Championship", championship, cols[1]),
-                ("🥉 League One", league_one, cols[2]),
-                ("📋 League Two", league_two, cols[3])
-            ]):
-                with col:
-                    st.markdown(f"**{name}**")
-                    country_counts = df['country_code'].value_counts().head(3)
-                    for country, count in country_counts.items():
-                        flag = FLAG_EMOJI.get(country, '')
-                        country_name = COUNTRY_NAMES.get(country, country)
-                        st.markdown(f"{flag} {country_name}: **{count}** clubs")
-        
-        st.markdown("---")
-        
-        # Additional insights
-        with st.expander("📈 League System Insights"):
-            st.markdown("""
-            ### How the League System Works
-            
-            This theoretical league system groups the top 92 clubs from ex-Soviet republics into 4 tiers,
-            similar to the English football pyramid:
-            
-            **🥇 Premier League (Tier 1) - 20 Clubs**
-            - Top 4: Champions League qualification ⭐
-            - 5th-6th: Europa League qualification 🌍
-            - 18th-20th: Relegation to Championship 🔻
-            
-            **🥈 Championship (Tier 2) - 24 Clubs**
-            - 1st-2nd: Automatic promotion to Premier League 🔼
-            - 3rd-6th: Playoff for final promotion spot 🎲
-            - 22nd-24th: Relegation to League One 🔻
-            
-            **🥉 League One (Tier 3) - 24 Clubs**
-            - 1st-2nd: Automatic promotion to Championship 🔼
-            - 3rd-6th: Playoff for final promotion spot 🎲
-            - 22nd-24th: Relegation to League Two 🔻
-            
-            **📋 League Two (Tier 4) - 24 Clubs**
-            - 1st-2nd: Automatic promotion to League One 🔼
-            - 3rd-6th: Playoff for final promotion spot 🎲
-            - 22nd-24th: Relegation (theoretical) 🔻
-            
-            *Note: This is a theoretical structure based on current PointAVG coefficients.*
-            """)
     
     with tab6:
         # Country Rankings Tab - Individual country club rankings
@@ -752,8 +614,6 @@ try:
         country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
         country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
         
-        # overall_position is already in club_results_df - don't overwrite it!
-        
         # Get nation coefficient for this country
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values
         nation_coef = nation_coef[0] if len(nation_coef) > 0 else 0
@@ -773,8 +633,10 @@ try:
             st.metric("Total Clubs", len(country_clubs))
         
         with col4:
-            clubs_in_top_20 = len(country_clubs[country_clubs['overall_position'] <= 20])
-            st.metric("Clubs in Premier League", clubs_in_top_20)
+            # Changed metric as requested: "Clubs in League System"
+            # Since country_clubs contains all clubs from that country in the system
+            clubs_in_system = len(country_clubs)
+            st.metric("Clubs in League System", clubs_in_system)
         
         st.markdown("---")
         
@@ -984,8 +846,7 @@ try:
         PointAVG = Average(top 5 seasons) × Nation Coefficient
         ```
         
-        **Countries Included:** 
-        - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 
+        **Countries Included:** - 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 
         - 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
         
         *15 Ex-Soviet Republics*
