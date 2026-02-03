@@ -19,10 +19,18 @@ st.markdown("""
     }
     .stMetric {
         background-color: #f0f2f6;
-        padding: 15px;
+        padding: 10px;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         margin-bottom: 10px;
+        min-width: 0px !important;
+    }
+    /* Adjust label size for very small columns */
+    .stMetric label {
+        font-size: 12px !important;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        font-size: 16px !important;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
@@ -256,27 +264,28 @@ try:
     # Main ranking table
     st.header("🏆 Current Nation Rankings (2024/25)")
     
-    # Display metrics for all nations in a grid (5 columns)
-    cols = st.columns(5)
+    # Display metrics for all nations in ONE row
+    # Use as many columns as there are countries
+    cols = st.columns(len(league_df))
     
     for idx, row in league_df.iterrows():
-        with cols[idx % 5]:
+        with cols[idx]:
             rank = idx + 1
             # Add medal/position emoji
             if rank == 1:
-                prefix = "🥇 1st"
+                prefix = "🥇"
             elif rank == 2:
-                prefix = "🥈 2nd"
+                prefix = "🥈"
             elif rank == 3:
-                prefix = "🥉 3rd"
+                prefix = "🥉"
             else:
                 prefix = f"#{rank}"
-                
-            st.markdown(f"### {row['flag']} {prefix}")
-            st.metric(
-                row['country_name'],
-                f"{row['total4']:.4f} pts"
-            )
+            
+            # Use a slightly more compact layout for the row
+            st.markdown(f"**{prefix}**")
+            st.markdown(f"{row['flag']}")
+            st.caption(f"{row['total4']:.2f}")
+
     
     st.markdown("---")
     
