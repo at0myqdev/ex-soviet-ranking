@@ -265,9 +265,8 @@ try:
     st.header("🏆 Current Nation Rankings (2024/25)")
     
     # Use HTML Flexbox instead of st.columns to allow proper sizing and fitting in one row
-    rankings_html = """
-    <div style="display: flex; flex-direction: row; justify-content: space-between; overflow-x: auto; padding-bottom: 15px; gap: 10px;">
-    """
+    # Important: No indentation at the start of the string to avoid code block rendering
+    rankings_html = """<div style="display: flex; flex-direction: row; justify-content: space-between; overflow-x: auto; padding-bottom: 15px; gap: 10px;">"""
     
     for idx, row in league_df.iterrows():
         rank = idx + 1
@@ -290,8 +289,7 @@ try:
             <div style="font-weight: bold; font-size: 1rem; margin-bottom: 5px;">{rank_display}</div>
             <div style="font-size: 3rem; line-height: 1.1; margin-bottom: 5px; cursor: help;" title="{row['country_name']}">{row['flag']}</div>
             <div style="font-size: 0.85rem; color: #555; background: #f0f2f6; border-radius: 5px; padding: 2px 5px;">{row['total4']:.4f}</div>
-        </div>
-        """
+        </div>"""
         
     rankings_html += "</div>"
     st.markdown(rankings_html, unsafe_allow_html=True)
@@ -907,8 +905,8 @@ try:
         ClubCoef = Average(top 5 seasons) × Nation Coefficient
         ```
         
-        **Countries Included:** 🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
-        
+        **Countries Included:** 
+        🇺🇦 🇷🇺 🇦🇿 🇺🇿 🇦🇲 🇲🇩 🇱🇻 🇰🇿 🇬🇪 🇰🇬 🇪🇪 🇱🇹 🇧🇾 🇹🇲 🇹🇯
         *15 Ex-Soviet Republics*
         """)
     
