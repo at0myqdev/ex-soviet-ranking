@@ -237,7 +237,7 @@ def generate_flag_bar(present_country_codes):
             # Active flag
             html += f"<span style='opacity: 1.0; font-size: 1.2rem; cursor: help;' title='{COUNTRY_NAMES[code]}'>{flag}</span>"
         else:
-            # Inactive flag (grayed out)
+            # Inactive flag (grayed out) - Updated with country name
             html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented: {COUNTRY_NAMES[code]}'>{flag}</span>"
     html += "</div>"
     return html
@@ -531,10 +531,10 @@ try:
                 league_df_tier['league_pos'] = range(1, len(league_df_tier) + 1)
                 
                 # Create display dataframe
-                # Swapped Club and Country columns as requested
-                display = league_df_tier[['league_pos', 'flag', 'country_name', 'team', 'point_avg']].copy()
-                display.columns = ['Pos', '🏴', 'Country', 'Club', 'PointAVG']
-                display['PointAVG'] = display['PointAVG'].apply(lambda x: f"{x:.4f}")
+                # Removed 'country_name' column as requested, retained flag
+                display = league_df_tier[['league_pos', 'flag', 'team', 'point_avg']].copy()
+                display.columns = ['Pos', '🏴', 'Club', 'Pts']
+                display['Pts'] = display['Pts'].apply(lambda x: f"{x:.4f}")
                 
                 # Add visual indicators for promotion/relegation zones
                 display['Status'] = ''
@@ -568,13 +568,13 @@ try:
                             "🏴",
                             width="small"
                         ),
-                        "Country": st.column_config.TextColumn(
-                            "Country",
-                            width="small"
-                        ),
                         "Club": st.column_config.TextColumn(
                             "Club",
                             width="medium"
+                        ),
+                        "Pts": st.column_config.TextColumn(
+                            "Pts",
+                            width="small"
                         ),
                          "Status": st.column_config.TextColumn(
                             "Status",
@@ -634,8 +634,8 @@ try:
         
         with col4:
             # Changed metric as requested: "Clubs in League System"
-            # Since country_clubs contains all clubs from that country in the system
-            clubs_in_system = len(country_clubs)
+            # Now only counts clubs in the top 92 (Tier 1-4)
+            clubs_in_system = len(country_clubs[country_clubs['overall_position'] <= 92])
             st.metric("Clubs in League System", clubs_in_system)
         
         st.markdown("---")
