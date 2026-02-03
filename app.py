@@ -22,6 +22,7 @@ st.markdown("""
         padding: 15px;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
     }
     .stTabs [data-baseweb="tab-list"] {
         gap: 24px;
@@ -255,32 +256,27 @@ try:
     # Main ranking table
     st.header("🏆 Current Nation Rankings (2024/25)")
     
-    # Display metrics for top 3 with flags
-    col1, col2, col3 = st.columns(3)
+    # Display metrics for all nations in a grid (5 columns)
+    cols = st.columns(5)
     
-    with col1:
-        st.markdown(f"### {league_df.iloc[0]['flag']} 🥇")
-        st.metric(
-            "1st Place", 
-            league_df.iloc[0]['country_name'], 
-            f"{league_df.iloc[0]['total4']:.4f} pts"
-        )
-    
-    with col2:
-        st.markdown(f"### {league_df.iloc[1]['flag']} 🥈")
-        st.metric(
-            "2nd Place", 
-            league_df.iloc[1]['country_name'], 
-            f"{league_df.iloc[1]['total4']:.4f} pts"
-        )
-    
-    with col3:
-        st.markdown(f"### {league_df.iloc[2]['flag']} 🥉")
-        st.metric(
-            "3rd Place", 
-            league_df.iloc[2]['country_name'], 
-            f"{league_df.iloc[2]['total4']:.4f} pts"
-        )
+    for idx, row in league_df.iterrows():
+        with cols[idx % 5]:
+            rank = idx + 1
+            # Add medal/position emoji
+            if rank == 1:
+                prefix = "🥇 1st"
+            elif rank == 2:
+                prefix = "🥈 2nd"
+            elif rank == 3:
+                prefix = "🥉 3rd"
+            else:
+                prefix = f"#{rank}"
+                
+            st.markdown(f"### {row['flag']} {prefix}")
+            st.metric(
+                row['country_name'],
+                f"{row['total4']:.4f} pts"
+            )
     
     st.markdown("---")
     
@@ -298,10 +294,15 @@ try:
     for col in ['UEFA Coefficient', 'AFC Coefficient', 'FIFA Ranking', 'Nation Coefficient']:
         display_df[col] = display_df[col].apply(lambda x: f"{x:.4f}" if pd.notna(x) else "0.0000")
     
+    # Calculate height: (rows + header) * approx_row_height + padding
+    # Using 35px per row and some buffer
+    table_height = (len(display_df) + 1) * 35 + 3
+    
     st.dataframe(
         display_df, 
         use_container_width=True, 
         hide_index=True,
+        height=table_height,
         column_config={
             "Rank": st.column_config.NumberColumn(
                 "Rank",
@@ -364,7 +365,16 @@ try:
     # Visualizations
     st.header("📈 Visualizations")
     
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Nation Coefficients", "Coefficient Breakdown", "Historical UEFA", "Top Clubs", "🏆 League System", "🌍 Country Rankings"])
+    # Add Historical AFC tab
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "Nation Coefficients", 
+        "Coefficient Breakdown", 
+        "Historical UEFA", 
+        "Historical AFC", 
+        "Top Clubs", 
+        "🏆 League System", 
+        "🌍 Country Rankings"
+    ])
     
     with tab1:
         # Bar chart of nation coefficients with flags in labels
@@ -461,8 +471,46 @@ try:
         )
         
         st.plotly_chart(fig, use_container_width=True)
-    
+        
     with tab4:
+        # Line chart for AFC coefficients over time
+        afc_cols = ['AFC_2018', 'AFC_2019', 'AFC_2021', 'AFC_2022', 'AFC_2023_24', 'AFC_2024_25']
+        afc_labels = ['2018', '2019', '2021', '2022', '2023/24', '2024/25']
+        
+        fig = go.Figure()
+        
+        # Add lines for each country (only those with non-zero AFC points might be interesting, but showing all for consistency)
+        for idx, row in league_df.iterrows():
+            # Check if country has any AFC points to avoid clutter if desired, 
+            # but usually it's better to show everything or just the relevant ones.
+            # Showing all for consistency with other charts.
+            fig.add_trace(go.Scatter(
+                x=afc_labels,
+                y=[row[col] for col in afc_cols],
+                mode='lines+markers',
+                name=f"{row['flag']} {row['country_name']}",
+                line=dict(width=2),
+                marker=dict(size=6)
+            ))
+        
+        fig.update_layout(
+            title='AFC Coefficients Over Time',
+            xaxis_title='Season',
+            yaxis_title='AFC Coefficient',
+            height=600,
+            hovermode='x unified',
+            legend=dict(
+                orientation="v",
+                yanchor="top",
+                y=1,
+                xanchor="left",
+                x=1.02
+            )
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+    
+    with tab5:
         # Bar chart of top clubs with flags
         top_15 = club_results_df.head(15).copy()
         
@@ -482,7 +530,7 @@ try:
         fig.update_xaxes(tickangle=-45)
         st.plotly_chart(fig, use_container_width=True)
     
-    with tab5:
+    with tab6:
         # League System Tab - English-style 4-tier structure
         st.markdown("## 🏆 Theoretical Ex-Soviet League System")
         st.markdown("*English football pyramid style - 4 divisions based on club coefficients*")
@@ -578,7 +626,7 @@ try:
                     }
                 )
     
-    with tab6:
+    with tab7:
         # Country Rankings Tab - Individual country club rankings
         st.markdown("## 🌍 Club Rankings by Country")
         st.markdown("*View the ranking of clubs within each ex-Soviet nation*")
