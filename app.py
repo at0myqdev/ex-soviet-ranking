@@ -713,16 +713,24 @@ try:
                             map_data,
                             lat="lat",
                             lon="lon",
-                            hover_name="team",
-                            hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
+                            hover_name="team",  # Wird zu %{hovertext}
+                            hover_data={
+                                "flag": True,          # customdata[0]
+                                "point_avg": True,     # customdata[1] (Formatierung machen wir im template)
+                                "country_name": False, 
+                                "lat": False, 
+                                "lon": False
+                            },
                             height=450
                         )
+                        
                         fig.update_traces(
                             marker=dict(
                                 size=15,
                                 color='#0068c9',
                                 opacity=0.75
-                            )
+                            ), # <-- Hier war das Komma wichtig!
+                            hovertemplate="<b>%{hovertext}</b><br><br>%{customdata[0]}<br>Coef: %{customdata[1]:.4f}<extra></extra>"
                         )
                         
                         fig.update_layout(
