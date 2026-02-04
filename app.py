@@ -711,6 +711,8 @@ try:
 
         # Changed metric as requested: "Clubs in League System"
         # Now only counts clubs in the top 92 (Tier 1-4)
+        country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
+        country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
         clubs_in_system = len(country_clubs[country_clubs['overall_position'] <= 92])
         st.metric("Clubs in League System", clubs_in_system)
 
