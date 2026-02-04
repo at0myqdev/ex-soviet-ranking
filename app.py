@@ -102,7 +102,7 @@ FLAG_EMOJI = {
 @st.cache_data
 def load_and_calculate_data():
     # Load LeagueRanking.csv
-    league_df = pd.read_csv('LeagueRanking.csv', sep=';', decimal=',')
+    league_df = pd.read_csv('LeagueRanking.csv', sep=',', decimal='.')
     
     # Convert numeric columns to float
     uefa_cols = ['UEFA_2018_19', 'UEFA_2019_20', 'UEFA_2020_21', 'UEFA_2021_22', 'UEFA_2022_23', 'UEFA_2023_24', 'UEFA_2024_25']
@@ -152,7 +152,7 @@ def load_and_calculate_data():
 @st.cache_data
 def calculate_club_coefficients(league_df):
     # Load ClubCoef.csv
-    club_df = pd.read_csv('ClubCoef.csv', sep=';', decimal=',')
+    club_df = pd.read_csv('ClubCoef.csv', sep=',', decimal='.')
     
     # Convert numeric columns
     numeric_cols = ['year', 'league_tier', 'league_games', 'league_points', 'group', 'group_games', 'group_points']
