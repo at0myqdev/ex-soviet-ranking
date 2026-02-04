@@ -699,6 +699,7 @@ try:
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
+                        fig.update_geos(fitbounds="locations")
                     else:
                         st.info("Map view available once coordinates are stored in the CSV file.")
                 else:
