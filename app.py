@@ -729,10 +729,10 @@ try:
             league_df.sort_values('clubs_in_system', ascending=False), 
             x='country_name', 
             y='clubs_in_system',
-            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
+            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'flag'},
             color='clubs_in_system',
             color_continuous_scale='Oryel',
-            text='flag' # Displays the nation's flag above each bar
+            text='clubs_in_system' # Displays the nation's flag above each bar
         )
         
         # Styling for the bar chart
