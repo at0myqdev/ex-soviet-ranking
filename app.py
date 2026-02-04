@@ -99,9 +99,11 @@ FLAG_EMOJI = {
 }
 
 # Load and calculate data
-@st.cache_data
+# HINWEIS: ttl=0 erzwingt das Neuladen (Cache Clear), damit Änderungen an der CSV sofort sichtbar sind.
+@st.cache_data(ttl=0)
 def load_and_calculate_data():
     # Load LeagueRanking.csv
+    # Updated to American format (comma separator, dot decimal) for GitHub compatibility
     league_df = pd.read_csv('LeagueRanking.csv', sep=',', decimal='.')
     
     # Convert numeric columns to float
@@ -149,15 +151,22 @@ def load_and_calculate_data():
     
     return league_df
 
-@st.cache_data
+@st.cache_data(ttl=0)
 def calculate_club_coefficients(league_df):
     # Load ClubCoef.csv
+    # Updated to American format (comma separator, dot decimal) for GitHub compatibility
     club_df = pd.read_csv('ClubCoef.csv', sep=',', decimal='.')
     
     # Convert numeric columns
     numeric_cols = ['year', 'league_tier', 'league_games', 'league_points', 'group', 'group_games', 'group_points']
     for col in numeric_cols:
         club_df[col] = pd.to_numeric(club_df[col], errors='coerce')
+    
+    # Handle coordinates if present (ensure they are numeric)
+    if 'lat' in club_df.columns:
+        club_df['lat'] = pd.to_numeric(club_df['lat'], errors='coerce')
+    if 'lon' in club_df.columns:
+        club_df['lon'] = pd.to_numeric(club_df['lon'], errors='coerce')
     
     # Calculate club coefficient for each row
     def calculate_row_coefficient(row):
@@ -204,6 +213,8 @@ def calculate_club_coefficients(league_df):
     # Calculate ClubCoef (formerly PointAVG) for each club
     club_results = []
     
+    # ORIGINAL GROUPING: By ['country_code', 'team_code']
+    # This preserves separate entries if team codes differ (e.g. M25 and M26 are treated separately)
     for (country_code, team_code), group in club_df.groupby(['country_code', 'team_code']):
         # Sort by year descending and take top 5
         top_5 = group.nlargest(5, 'year')
@@ -219,13 +230,22 @@ def calculate_club_coefficients(league_df):
             # Calculate ClubCoef
             point_avg = avg_coefficient * nation_coef
             
+            # Extract coordinates if available (take first non-null value)
+            lat = None
+            lon = None
+            if 'lat' in group.columns and 'lon' in group.columns:
+                lat = group['lat'].dropna().iloc[0] if not group['lat'].dropna().empty else None
+                lon = group['lon'].dropna().iloc[0] if not group['lon'].dropna().empty else None
+
             club_results.append({
                 'country_code': country_code,
                 'team': group['team'].iloc[0],
                 'team_code': team_code,
                 'point_avg': point_avg,
                 'avg_coefficient': avg_coefficient,
-                'nation_coef': nation_coef
+                'nation_coef': nation_coef,
+                'lat': lat,
+                'lon': lon
             })
     
     club_results_df = pd.DataFrame(club_results)
@@ -257,8 +277,6 @@ def generate_flag_bar(present_country_codes):
 
 # Load the data
 try:
-    st.cache_data.clear()
-    
     league_df = load_and_calculate_data()
     club_results_df, club_df = calculate_club_coefficients(league_df)
     
@@ -646,6 +664,32 @@ try:
                         )
                     }
                 )
+
+                # Add Map for this league tier if coordinates exist
+                if 'lat' in league_df_tier.columns and 'lon' in league_df_tier.columns:
+                    # Filter for rows where lat/lon is not NaN
+                    map_data = league_df_tier.dropna(subset=['lat', 'lon'])
+                    
+                    if not map_data.empty:
+                        st.markdown(f"###### 📍 {league_name} Karte")
+                        fig = px.scatter_mapbox(
+                            map_data,
+                            lat="lat",
+                            lon="lon",
+                            hover_name="team",
+                            hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
+                            zoom=2,
+                            height=300
+                        )
+                        fig.update_layout(
+                            mapbox_style="open-street-map",
+                            margin={"r":0,"t":0,"l":0,"b":0}
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+                    else:
+                        st.info("Kartenansicht verfügbar, sobald Koordinaten in der CSV hinterlegt sind.")
+                else:
+                    st.info("Füge 'lat' und 'lon' Spalten zur CSV hinzu, um hier eine Karte zu sehen.")
     
     with tab7:
         # Country Rankings Tab - Individual country club rankings
