@@ -672,37 +672,30 @@ try:
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
+                        # 1. Zentrum berechnen (Durchschnitt aller Koordinaten)
+                        avg_lat = map_data['lat'].mean()
+                        avg_lon = map_data['lon'].mean()
+                
+                        # 2. Karte erstellen
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=400 
+                            height=500 # Etwas höher für den "Europlan"-Look
                         )
-                        
+                        fig.update_geos(fitbounds="locations")
+                        # 3. Das Layout fixieren (keine automatischen Bounds)
                         fig.update_layout(
                             mapbox_style="open-street-map",
-                            margin={"r":10,"t":10,"l":10,"b":10}, # Kleiner Rand im Container
+                            margin={"r":0,"t":0,"l":0,"b":0},
                             mapbox=dict(
-                                # Das hier ist der entscheidende Teil für "Automatik":
-                                # Wir lassen Plotly entscheiden, aber sagen ihm, er soll nicht übertreiben.
-                                layers=[],
+                                center=dict(lat=avg_lat, lon=avg_lon),
+                                zoom=3.2  # <--- Dieser Wert steuert die Nähe. 
+                                          # 3.2 ist ideal für das Gebiet Osteuropa/Zentralasien.
+                                          # Größerer Wert = näher dran, kleinerer Wert = weiter weg.
                             )
-                        )
-                
-                        # FITBOUNDS erzwingt die Anpassung an die Daten
-                        # 'locations' nimmt nur die Punkte als Basis
-                        fig.update_mapboxes(
-                            fig.update_geos(fitbounds="locations")
-                            # Falls es zu nah ist, ist das hier dein einziger Hebel:
-                            # Wir fügen den Punkten in der Berechnung fiktive Ränder hinzu
-                            bounds={
-                                "west": map_data['lon'].min() - 3,
-                                "east": map_data['lon'].max() + 3,
-                                "south": map_data['lat'].min() - 2,
-                                "north": map_data['lat'].max() + 2
-                            }
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
