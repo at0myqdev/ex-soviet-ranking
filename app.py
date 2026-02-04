@@ -671,7 +671,7 @@ try:
                     map_data = league_df_tier.dropna(subset=['lat', 'lon'])
                     
                     if not map_data.empty:
-                        st.markdown(f"###### 📍 {league_name} Karte")
+                        st.markdown(f"###### 📍 {league_name} Map")
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
@@ -685,11 +685,12 @@ try:
                             mapbox_style="open-street-map",
                             margin={"r":0,"t":0,"l":0,"b":0}
                         )
+                        fig.update_geos(fitbounds="locations")
                         st.plotly_chart(fig, use_container_width=True)
                     else:
-                        st.info("Kartenansicht verfügbar, sobald Koordinaten in der CSV hinterlegt sind.")
+                        st.info("Map view available once coordinates are stored in the CSV file.")
                 else:
-                    st.info("Füge 'lat' und 'lon' Spalten zur CSV hinzu, um hier eine Karte zu sehen.")
+                    st.info("Add data to 'lat' and 'lon' columns to the CSV to see a map here.")
     
     with tab7:
         # Country Rankings Tab - Individual country club rankings
