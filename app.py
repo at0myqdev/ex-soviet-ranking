@@ -690,7 +690,7 @@ try:
                             # Wir erhöhen den Puffer von 1.2 auf 1.8, um massiv Platz zu schaffen
                             # Und wir simulieren eine noch kleinere Containerbreite (380 statt 420),
                             # damit die Karte "denkt", sie hätte weniger Platz und weiter rauszoomt.
-                            padding_factor = 1.8 
+                            padding_factor = 1.9 
                             simulated_width = 380 
                             
                             # Zoom basierend auf Längengrad (Riga -> Usbekistan)
