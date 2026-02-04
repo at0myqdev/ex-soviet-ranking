@@ -685,26 +685,26 @@ try:
                         center_lon = (lon_min + lon_max) / 2
                 
                         if len(map_data) > 1:
-                            # Das Problem bei 420px Breite ist die horizontale Ausdehnung (Längengrad)
-                            # Wir berechnen den Zoom basierend auf der Längengrad-Differenz.
-                            # 360 Grad / (2^Zoom) * Pixelbreite = Sichtbereich
-                            
-                            # Formel für die Breite (Längengrad):
-                            # Zoom = log2(360 * Containerbreite / (Delta_Lon * 256))
-                            # Wir nutzen 420 als Containerbreite und 256 als Standard-Tile-Größe von Mapbox
                             import math
                             
-                            # Sicherheits-Puffer: Wir nehmen delta_lon * 1.2, damit die Punkte nicht am Rand kleben
-                            zoom_level = math.log2((360 * 420) / (max(delta_lon, 0.1) * 1.2 * 256))
+                            # Wir erhöhen den Puffer von 1.2 auf 1.8, um massiv Platz zu schaffen
+                            # Und wir simulieren eine noch kleinere Containerbreite (380 statt 420),
+                            # damit die Karte "denkt", sie hätte weniger Platz und weiter rauszoomt.
+                            padding_factor = 1.8 
+                            simulated_width = 380 
                             
-                            # Zusätzliche Absicherung für die Höhe: Falls die Nord-Süd-Ausdehnung größer ist
-                            zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * 1.2 * 256))
+                            # Zoom basierend auf Längengrad (Riga -> Usbekistan)
+                            zoom_lon = math.log2((360 * simulated_width) / (max(delta_lon, 0.1) * padding_factor * 256))
                             
-                            # Der kleinere Zoom gewinnt (damit alles drauf passt)
-                            zoom_level = min(zoom_level, zoom_lat)
+                            # Zoom basierend auf Breitengrad (Nord-Süd)
+                            zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * padding_factor * 256))
                             
-                            # Limitierung auf sinnvolle Werte
-                            zoom_level = max(min(zoom_level, 10), 1.0)
+                            # Den sichereren (kleineren) Zoom wählen
+                            zoom_level = min(zoom_lon, zoom_lat)
+                            
+                            # WICHTIG: Begrenzung nach unten. 
+                            # Stufe 2.5 zeigt meistens fast ganz Europa/Zentralasien.
+                            zoom_level = max(min(zoom_level, 10), 2.0)
                         else:
                             zoom_level = 4.0
                 
