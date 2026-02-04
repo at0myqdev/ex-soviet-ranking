@@ -672,33 +672,30 @@ try:
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
-                        # Erstellung der Map OHNE festen Zoom im px-Aufruf
+                        # 1. Zentrum berechnen (Durchschnitt aller Koordinaten)
+                        avg_lat = map_data['lat'].mean()
+                        avg_lon = map_data['lon'].mean()
+                
+                        # 2. Karte erstellen
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=450
+                            height=500 # Etwas höher für den "Europlan"-Look
                         )
                         
-                        # Layout anpassen
+                        # 3. Das Layout fixieren (keine automatischen Bounds)
                         fig.update_layout(
                             mapbox_style="open-street-map",
-                            margin={"r":0,"t":0,"l":0,"b":0}
-                        )
-                
-                        # Der Trick: Wir setzen die Grenzen (Bounds) explizit
-                        # Wir berechnen die äußeren Ecken deiner Datenpunkte
-                        padding = 1.5  # Ein kleiner Puffer in Grad, damit die Punkte nicht am Rand kleben
-                        
-                        fig.update_mapboxes(
-                            bounds={
-                                "west": map_data['lon'].min() - padding,
-                                "east": map_data['lon'].max() + padding,
-                                "south": map_data['lat'].min() - padding,
-                                "north": map_data['lat'].max() + padding
-                            }
+                            margin={"r":0,"t":0,"l":0,"b":0},
+                            mapbox=dict(
+                                center=dict(lat=avg_lat, lon=avg_lon),
+                                zoom=3.2  # <--- Dieser Wert steuert die Nähe. 
+                                          # 3.2 ist ideal für das Gebiet Osteuropa/Zentralasien.
+                                          # Größerer Wert = näher dran, kleinerer Wert = weiter weg.
+                            )
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
