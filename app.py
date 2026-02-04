@@ -221,7 +221,7 @@ def calculate_club_coefficients(league_df):
         
         if len(top_5) > 0:
             # Calculate average of row coefficients
-            avg_coefficient = top_5['row_coefficient'].mean()
+            avg_coefficient = top_5['row_coefficient'].fillna(0).mean()
             
             # Get nation coefficient (total4) from league_df
             nation_coef = league_df[league_df['country_code'] == country_code]['total4'].values
