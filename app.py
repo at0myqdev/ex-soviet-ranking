@@ -694,7 +694,7 @@ try:
                         # FITBOUNDS erzwingt die Anpassung an die Daten
                         # 'locations' nimmt nur die Punkte als Basis
                         fig.update_mapboxes(
-                            autorange=True,
+                            fig.update_geos(fitbounds="locations")
                             # Falls es zu nah ist, ist das hier dein einziger Hebel:
                             # Wir fügen den Punkten in der Berechnung fiktive Ränder hinzu
                             bounds={
