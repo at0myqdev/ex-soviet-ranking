@@ -672,27 +672,31 @@ try:
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
-                        # --- DYNAMISCHE ZOOM-BERECHNUNG ---
+                        # --- DYNAMISCHE ZOOM-BERECHNUNG (KALIBRIERT) ---
                         lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
                         lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
                         
-                        # Berechne die maximale Ausdehnung in Grad
-                        max_bound = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
+                        # Die Ausdehnung in Grad
+                        delta_lat = abs(lat_max - lat_min)
+                        delta_lon = abs(lon_max - lon_min)
+                        max_bound = max(delta_lat, delta_lon)
                         
-                        # Umrechnung in Kilometer (ca. 111km pro Grad)
-                        max_bound_km = max_bound * 111
-                        
-                        # Logarithmische Zoom-Formel
-                        # Wir nehmen 10.5 statt 11.5, da dein Container mit 420px sehr schmal ist
-                        # Das sorgt für etwas mehr "Puffer" um die Punkte
-                        if max_bound_km > 0:
-                            zoom_level = 10.5 - np.log10(max_bound_km) # np.log10 ist hier stabiler
-                        else:
-                            zoom_level = 5 # Standard für einen einzelnen Punkt
-                            
                         # Zentrum berechnen
                         center_lat = (lat_min + lat_max) / 2
                         center_lon = (lon_min + lon_max) / 2
+                
+                        # Zoom-Logik
+                        if len(map_data) > 1 and max_bound > 0:
+                            # Diese Formel ist für schmale Container (420px) optimiert
+                            # Je größer der erste Wert (11.5), desto näher der Zoom.
+                            # Wir nutzen np.log2, da Zoom-Stufen binär skalieren (2, 4, 8...)
+                            zoom_level = 11.5 - np.log2(max_bound * 111 / 25) 
+                            
+                            # Begrenzung, damit es nicht zu extrem wird (z.B. bei Stadt-Derbys)
+                            zoom_level = min(max(zoom_level, 1.5), 10.0)
+                        else:
+                            # Einzelner Punkt: Ein angenehmer Zoom, um das Land zu sehen
+                            zoom_level = 4.0 
                 
                         # --- KARTE ERSTELLEN ---
                         fig = px.scatter_mapbox(
@@ -701,7 +705,7 @@ try:
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=400
+                            height=450
                         )
                         
                         fig.update_layout(
