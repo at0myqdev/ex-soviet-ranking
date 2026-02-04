@@ -683,7 +683,7 @@ try:
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=500 # Etwas höher für den "Europlan"-Look
+                            height=450 # Etwas höher für den "Europlan"-Look
                         )
                         
                         # 3. Das Layout fixieren (keine automatischen Bounds)
