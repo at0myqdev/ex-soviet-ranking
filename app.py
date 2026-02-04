@@ -574,22 +574,23 @@ try:
         st.markdown("## 🏆 Theoretical Ex-Soviet League System")
         st.markdown("*English football pyramid style - 4 divisions based on club coefficients*")
         
-        # Info box
+        # Information box for users
         st.info("""
         **System Overview:**
         The league system groups the top 92 clubs into 4 tiers. 
         Flags indicate which countries are represented in each league.
         """)
         
-        # Prepare league data
+        # Prepare data from the club results
         all_clubs = club_results_df.copy()
         
-        # Define league tiers: 20 + 24 + 24 + 24
+        # Define league tiers based on overall ranking: 20 + 24 + 24 + 24
         premier_league = all_clubs.iloc[0:20].copy()
         championship = all_clubs.iloc[20:44].copy()
         league_one = all_clubs.iloc[44:68].copy()
         league_two = all_clubs.iloc[68:92].copy()
         
+        # Metadata for the loop to create tables and maps
         tiers_data = [
             (premier_league, "🥇 Premier League", 1),
             (championship, "🥈 Championship", 2),
@@ -597,38 +598,32 @@ try:
             (league_two, "📋 League Two", 4)
         ]
         
-        # --- ERSTE ZEILE: DIE TABELLEN ---
+        # --- FIRST ROW: LEAGUE TABLES ---
+        # Creating 4 columns to display the tables side-by-side
         table_cols = st.columns(4)
         
         for idx, (league_df_tier, league_name, tier) in enumerate(tiers_data):
             with table_cols[idx]:
                 st.subheader(f"{league_name}")
                 
-                # Flag visualization
+                # Display flags of countries represented in this specific tier
                 present_countries = league_df_tier['country_code'].unique()
                 st.markdown(generate_flag_bar(present_countries), unsafe_allow_html=True)
                 
-                # Metric: Avg Points
+                # Calculate and display the average coefficient for the tier
                 avg_points = league_df_tier['point_avg'].mean()
                 st.caption(f"Avg Coef: {avg_points:.2f}")
                 
-                # League position within tier
+                # Add internal league position (1 to 20/24)
                 tier_display = league_df_tier.copy()
                 tier_display['league_pos'] = range(1, len(tier_display) + 1)
                 
-                # Create display dataframe
+                # Prepare the dataframe for visual display
                 display = tier_display[['league_pos', 'flag', 'team', 'point_avg']].copy()
                 display.columns = ['Pos', '🏴', 'Club', 'Coef']
                 display['Coef'] = display['Coef'].apply(lambda x: f"{x:.2f}")
-
-                # Berechne die Anzahl der Clubs im System pro Land für die Grafik
-                clubs_per_nation = all_clubs[all_clubs['overall_position'] <= 92]['country_name'].value_counts().reset_index()
-                clubs_per_nation.columns = ['country_name', 'clubs_in_system']
                 
-                # Merge diese Information in das league_df, damit wir Zugriff auf Flags und Koeffizienten haben
-                league_df = league_df.merge(clubs_per_nation, on='country_name', how='left').fillna(0)
-                
-                # Promotion/Relegation Status
+                # Assign Promotion/Relegation status based on tier rules
                 display['Status'] = ''
                 if tier == 1:
                     if display.index[0] == 0: display.loc[0, 'Status'] = '🏆 Champion'
@@ -638,6 +633,7 @@ try:
                     display.loc[display.index[2:6], 'Status'] = '🎲 Playoffs'
                     if tier < 4: display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
                 
+                # Calculate dynamic height to prevent scrolling within the dataframe
                 table_height = (len(display) + 1) * 35 + 5
                 
                 st.dataframe(
@@ -652,92 +648,103 @@ try:
                     }
                 )
     
-        # --- ZWEITE ZEILE: DIE KARTEN ---
+        # --- SECOND ROW: INTERACTIVE MAPS ---
+        # Creating a new row of columns ensures maps are perfectly aligned horizontally
         map_cols = st.columns(4)
         
-        import math # Für die Zoom-Logik
+        import math
     
         for idx, (league_df_tier, league_name, tier) in enumerate(tiers_data):
             with map_cols[idx]:
+                # Check if coordinates are available in the data
                 if 'lat' in league_df_tier.columns and 'lon' in league_df_tier.columns:
                     map_data = league_df_tier.dropna(subset=['lat', 'lon'])
                     
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
-                        # --- DYNAMISCHE ZOOM-BERECHNUNG ---
+                        # --- DYNAMIC ZOOM CALCULATION ---
+                        # Determine data boundaries for zoom calculation
                         lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
                         lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
-                        delta_lat = abs(lat_max - lat_min)
-                        delta_lon = abs(lon_max - lon_min)
-                        center_lat = (lat_min + lat_max) / 2
-                        center_lon = (lon_min + lon_max) / 2
+                        delta_lat, delta_lon = abs(lat_max - lat_min), abs(lon_max - lon_min)
+                        center_lat, center_lon = (lat_min + lat_max) / 2, (lon_min + lon_max) / 2
     
                         if len(map_data) > 1:
-                            # Kalibrierter Zoom für 420px Breite und weite Distanzen
+                            # Calibrated zoom logic for 420px width containers and long distances
                             padding_factor = 2.0 
                             zoom_lon = math.log2((360 * 380) / (max(delta_lon, 0.1) * padding_factor * 256))
                             zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * padding_factor * 256))
+                            # Select the most restrictive zoom to fit all points
                             zoom_level = max(min(min(zoom_lon, zoom_lat), 10), 1.0)
                         else:
+                            # Default zoom for a single point
                             zoom_level = 4.0
     
-                        # --- KARTE ERSTELLEN ---
-                        fig = px.scatter_mapbox(
+                        # --- GENERATE MAPBOX SCATTER PLOT ---
+                        fig_map = px.scatter_mapbox(
                             map_data,
-                            lat="lat",
-                            lon="lon",
-                            hover_name="team",
+                            lat="lat", lon="lon",
+                            hover_name="team", # Displayed as bold header in hover
                             hover_data={
-                                "flag": True,      # customdata[0]
-                                "point_avg": True, # customdata[1]
+                                "flag": True,      # Reference for customdata[0]
+                                "point_avg": True, # Reference for customdata[1]
                                 "country_name": False, "lat": False, "lon": False
                             },
                             height=450
                         )
                         
-                        fig.update_traces(
+                        # Customize markers and the hover popup template
+                        fig_map.update_traces(
                             marker=dict(size=15, color='#0068c9', opacity=0.75),
                             hovertemplate="<b>%{hovertext}</b><br><br>%{customdata[0]}<br>Coef: %{customdata[1]:.4f}<extra></extra>"
                         )
                         
-                        fig.update_layout(
+                        # Final layout adjustments for Mapbox
+                        fig_map.update_layout(
                             mapbox_style="open-street-map",
                             margin={"r":5,"t":5,"l":5,"b":5},
-                            mapbox=dict(
-                                center=dict(lat=center_lat, lon=center_lon),
-                                zoom=zoom_level
-                            )
+                            mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=zoom_level)
                         )
-                        
-                        st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.info("Map view available once coordinates are stored in the CSV file.")
-                else:
-                    st.info("Add data to 'lat' and 'lon' columns to the CSV to see a map here.")
-
+                        st.plotly_chart(fig_map, use_container_width=True)
+    
+        # --- THIRD ROW: OVERALL DISTRIBUTION CHART ---
+        st.markdown("---")
         st.subheader("📊 Distribution of Clubs in the League System")
-
-        # Grafik über die volle Breite
-        fig = px.bar(
+    
+        # Data preparation for the summary bar chart
+        # Counting how many clubs per country are in the Top 92 system
+        clubs_per_nation = all_clubs[all_clubs['overall_position'] <= 92]['country_name'].value_counts().reset_index()
+        clubs_per_nation.columns = ['country_name', 'clubs_in_system']
+    
+        # Clean up existing column to avoid Pandas 'Suffix Error' during re-runs
+        if 'clubs_in_system' in league_df.columns:
+            league_df = league_df.drop(columns=['clubs_in_system'])
+        
+        # Merge count data into the main nation ranking dataframe
+        league_df = league_df.merge(clubs_per_nation, on='country_name', how='left').fillna({'clubs_in_system': 0})
+    
+        # Generate the bar chart showing nation representation
+        fig_system = px.bar(
             league_df.sort_values('clubs_in_system', ascending=False), 
             x='country_name', 
             y='clubs_in_system',
-            title='Number of Clubs represented in Tiers 1-4',
             labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
             color='clubs_in_system',
             color_continuous_scale='Oryel',
-            text='flag'
+            text='flag' # Displays the nation's flag above each bar
         )
         
-        fig.update_traces(textposition='outside', textfont_size=20)
-        fig.update_layout(
-            xaxis_tickangle=-45,
-            height=500,
-            showlegend=False
+        # Styling for the bar chart
+        fig_system.update_traces(textposition='outside', textfont_size=20)
+        fig_system.update_layout(
+            xaxis_tickangle=-45, 
+            height=500, 
+            showlegend=False, 
+            xaxis_title=""
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig_system, use_container_width=True)
         
     with tab7:
         # Country Rankings Tab - Individual country club rankings
