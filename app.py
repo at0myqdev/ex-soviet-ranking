@@ -577,8 +577,8 @@ try:
         # Info box
         st.info("""
         **System Overview:**
-        The league system groups the top 92 clubs into 4 tiers.
-        Flags indicate which countries are represented in each league (grayed out flags are not present).
+        The league system groups the top 92 clubs into 4 tiers. 
+        Flags indicate which countries are represented in each league.
         """)
         
         # Prepare league data
@@ -590,22 +590,21 @@ try:
         league_one = all_clubs.iloc[44:68].copy()
         league_two = all_clubs.iloc[68:92].copy()
         
-        # Create columns for side-by-side view (nebeneinander)
-        # Using 4 columns for large displays.
-        league_cols = st.columns(4)
-        
         tiers_data = [
-            (premier_league, "🥇 Premier League", 1, 1),
-            (championship, "🥈 Championship", 2, 21),
-            (league_one, "🥉 League One", 3, 45),
-            (league_two, "📋 League Two", 4, 69)
+            (premier_league, "🥇 Premier League", 1),
+            (championship, "🥈 Championship", 2),
+            (league_one, "🥉 League One", 3),
+            (league_two, "📋 League Two", 4)
         ]
         
-        for idx, (league_df_tier, league_name, tier, start_pos) in enumerate(tiers_data):
-            with league_cols[idx]:
+        # --- ERSTE ZEILE: DIE TABELLEN ---
+        table_cols = st.columns(4)
+        
+        for idx, (league_df_tier, league_name, tier) in enumerate(tiers_data):
+            with table_cols[idx]:
                 st.subheader(f"{league_name}")
                 
-                # Flag visualization (Countries represented)
+                # Flag visualization
                 present_countries = league_df_tier['country_code'].unique()
                 st.markdown(generate_flag_bar(present_countries), unsafe_allow_html=True)
                 
@@ -613,31 +612,25 @@ try:
                 avg_points = league_df_tier['point_avg'].mean()
                 st.caption(f"Avg Coef: {avg_points:.2f}")
                 
-                # Add league position within tier
-                league_df_tier = league_df_tier.copy()
-                league_df_tier['league_pos'] = range(1, len(league_df_tier) + 1)
+                # League position within tier
+                tier_display = league_df_tier.copy()
+                tier_display['league_pos'] = range(1, len(tier_display) + 1)
                 
                 # Create display dataframe
-                # Removed 'country_name' column as requested, retained flag
-                display = league_df_tier[['league_pos', 'flag', 'team', 'point_avg']].copy()
+                display = tier_display[['league_pos', 'flag', 'team', 'point_avg']].copy()
                 display.columns = ['Pos', '🏴', 'Club', 'Coef']
                 display['Coef'] = display['Coef'].apply(lambda x: f"{x:.2f}")
                 
-                # Add visual indicators for promotion/relegation zones
+                # Promotion/Relegation Status
                 display['Status'] = ''
-                
                 if tier == 1:
-                    # Premier League: Only Champion and Relegation
-                    if display.index[0] == 0:
-                        display.loc[0, 'Status'] = '🏆 Champion'
+                    if display.index[0] == 0: display.loc[0, 'Status'] = '🏆 Champion'
                     display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
-                elif tier in [2, 3, 4]:
-                    # Championship, League One, League Two: Same structure
+                else:
                     display.loc[display.index[0:2], 'Status'] = '🔼 Promotion'
                     display.loc[display.index[2:6], 'Status'] = '🎲 Playoffs'
-                    display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
+                    if tier < 4: display.loc[display.index[-3:], 'Status'] = '🔻 Relegation'
                 
-                # Calculate height to avoid scrolling: (rows + 1 header) * approx_row_height + padding
                 table_height = (len(display) + 1) * 35 + 5
                 
                 st.dataframe(
@@ -646,90 +639,60 @@ try:
                     hide_index=True,
                     height=table_height,
                     column_config={
-                        "Pos": st.column_config.NumberColumn(
-                            "Pos",
-                            format="%d"
-                        ),
-                        "🏴": st.column_config.TextColumn(
-                            "🏴"
-                        ),
-                        "Club": st.column_config.TextColumn(
-                            "Club"
-                        ),
-                        "Coef": st.column_config.TextColumn(
-                            "Coef"
-                        ),
-                         "Status": st.column_config.TextColumn(
-                            "Status"
-                        )
+                        "Pos": st.column_config.NumberColumn("Pos", format="%d"),
+                        "Coef": st.column_config.TextColumn("Coef"),
+                        "Status": st.column_config.TextColumn("Status")
                     }
                 )
-
-                # Add Map for this league tier if coordinates exist
+    
+        st.markdown("---") # Trennlinie für die Optik
+    
+        # --- ZWEITE ZEILE: DIE KARTEN ---
+        map_cols = st.columns(4)
+        
+        import math # Für die Zoom-Logik
+    
+        for idx, (league_df_tier, league_name, tier) in enumerate(tiers_data):
+            with map_cols[idx]:
                 if 'lat' in league_df_tier.columns and 'lon' in league_df_tier.columns:
                     map_data = league_df_tier.dropna(subset=['lat', 'lon'])
                     
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
-                        # --- DYNAMISCHE ZOOM-BERECHNUNG (KALIBRIERT) ---
-                        # --- DYNAMISCHE ZOOM-BERECHNUNG FÜR EXTREME DISTANZEN ---
+                        # --- DYNAMISCHE ZOOM-BERECHNUNG ---
                         lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
                         lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
-                        
                         delta_lat = abs(lat_max - lat_min)
                         delta_lon = abs(lon_max - lon_min)
-                        
-                        # Zentrum berechnen
                         center_lat = (lat_min + lat_max) / 2
                         center_lon = (lon_min + lon_max) / 2
-                
+    
                         if len(map_data) > 1:
-                            import math
-                            
-                            # Wir erhöhen den Puffer von 1.2 auf 1.8, um massiv Platz zu schaffen
-                            # Und wir simulieren eine noch kleinere Containerbreite (380 statt 420),
-                            # damit die Karte "denkt", sie hätte weniger Platz und weiter rauszoomt.
+                            # Kalibrierter Zoom für 420px Breite und weite Distanzen
                             padding_factor = 2.0 
-                            simulated_width = 380 
-                            
-                            # Zoom basierend auf Längengrad (Riga -> Usbekistan)
-                            zoom_lon = math.log2((360 * simulated_width) / (max(delta_lon, 0.1) * padding_factor * 256))
-                            
-                            # Zoom basierend auf Breitengrad (Nord-Süd)
+                            zoom_lon = math.log2((360 * 380) / (max(delta_lon, 0.1) * padding_factor * 256))
                             zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * padding_factor * 256))
-                            
-                            # Den sichereren (kleineren) Zoom wählen
-                            zoom_level = min(zoom_lon, zoom_lat)
-                            
-                            # WICHTIG: Begrenzung nach unten. 
-                            # Stufe 2.5 zeigt meistens fast ganz Europa/Zentralasien.
-                            zoom_level = max(min(zoom_level, 10), 2.0)
+                            zoom_level = max(min(min(zoom_lon, zoom_lat), 10), 1.0)
                         else:
                             zoom_level = 4.0
-                
+    
                         # --- KARTE ERSTELLEN ---
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
                             lon="lon",
-                            hover_name="team",  # Wird zu %{hovertext}
+                            hover_name="team",
                             hover_data={
-                                "flag": True,          # customdata[0]
-                                "point_avg": True,     # customdata[1] (Formatierung machen wir im template)
-                                "country_name": False, 
-                                "lat": False, 
-                                "lon": False
+                                "flag": True,      # customdata[0]
+                                "point_avg": True, # customdata[1]
+                                "country_name": False, "lat": False, "lon": False
                             },
                             height=450
                         )
                         
                         fig.update_traces(
-                            marker=dict(
-                                size=15,
-                                color='#0068c9',
-                                opacity=0.75
-                            ), # <-- Hier war das Komma wichtig!
+                            marker=dict(size=15, color='#0068c9', opacity=0.75),
                             hovertemplate="<b>%{hovertext}</b><br><br>%{customdata[0]}<br>Coef: %{customdata[1]:.4f}<extra></extra>"
                         )
                         
