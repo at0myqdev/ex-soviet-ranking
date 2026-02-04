@@ -667,7 +667,6 @@ try:
 
                 # Add Map for this league tier if coordinates exist
                 if 'lat' in league_df_tier.columns and 'lon' in league_df_tier.columns:
-                    # Filter for rows where lat/lon is not NaN
                     map_data = league_df_tier.dropna(subset=['lat', 'lon'])
                     
                     if not map_data.empty:
@@ -678,13 +677,30 @@ try:
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=300
+                            height=400 # Etwas höher für bessere Sichtbarkeit
                         )
+                        
+                        # Berechnung des Zentrums für besseren Fokus
+                        center_lat = map_data['lat'].mean()
+                        center_lon = map_data['lon'].mean()
+                
                         fig.update_layout(
                             mapbox_style="open-street-map",
-                            margin={"r":0,"t":0,"l":0,"b":0}
+                            margin={"r":0,"t":0,"l":0,"b":0},
+                            mapbox=dict(
+                                center=dict(lat=center_lat, lon=center_lon),
+                                zoom=2.5  # Ein Wert zwischen 2 und 4 ist ideal für Eurasien
+                            )
                         )
-                        fig.update_geos(fitbounds="locations")
+                        
+                        # WICHTIG: Dies erzwingt, dass die Karte sich an die Marker anpasst
+                        fig.update_mapboxes(bounds={
+                            "west": map_data['lon'].min() - 2, 
+                            "east": map_data['lon'].max() + 2, 
+                            "south": map_data['lat'].min() - 2, 
+                            "north": map_data['lat'].max() + 2
+                        })
+                        
                         st.plotly_chart(fig, use_container_width=True)
                     else:
                         st.info("Map view available once coordinates are stored in the CSV file.")
