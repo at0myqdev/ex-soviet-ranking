@@ -1,4 +1,4 @@
-country_code,team,team_code,season,year,league_tier,league_games,league_points,group,group_games,group_points,lat,lan
+country_code,team,team_code,season,year,league_tier,league_games,league_points,group,group_games,group_points,lat,lon
 UKR,Dynamo Kyiv,DKV,2018/19,2018,1,22,50,1,10,22,50.43344208,30.52181161
 UKR,Dynamo Kyiv,DKV,2019/20,2019,1,22,45,1,10,14,,
 UKR,Dynamo Kyiv,DKV,2020/21,2020,1,26,65,,,,,
@@ -2619,3 +2619,4 @@ KGZ,OshSU Aldier,OSA,2021,2021,,,,,,,,
 KGZ,OshSU Aldier,OSA,2022,2022,,,,,,,,
 KGZ,OshSU Aldier,OSA,2023,2023,1,27,23,,,,,
 KGZ,OshSU Aldier,OSA,2024,2024,1,27,25,,,,,
+
