@@ -717,6 +717,7 @@ try:
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
                             height=450
                         )
+                        fig.update_traces(marker=dict(size=12))
                         
                         fig.update_layout(
                             mapbox_style="open-street-map",
