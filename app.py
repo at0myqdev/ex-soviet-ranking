@@ -727,9 +727,9 @@ try:
         # Generate the bar chart showing nation representation
         fig_system = px.bar(
             league_df.sort_values('clubs_in_system', ascending=False), 
-            x='country_name', 
+            x='flag', 
             y='clubs_in_system',
-            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'flag'},
+            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
             color='clubs_in_system',
             color_continuous_scale='Oryel',
             text='clubs_in_system' # Displays the nation's flag above each bar
