@@ -708,7 +708,26 @@ try:
                         st.info("Map view available once coordinates are stored in the CSV file.")
                 else:
                     st.info("Add data to 'lat' and 'lon' columns to the CSV to see a map here.")
-    
+
+        # Changed metric as requested: "Clubs in League System"
+        # Now only counts clubs in the top 92 (Tier 1-4)
+        clubs_in_system = len(country_clubs[country_clubs['overall_position'] <= 92])
+        st.metric("Clubs in League System", clubs_in_system)
+
+        fig = px.bar(
+            league_df, 
+            x='country_name', 
+            y='clubs_in_system',
+            title='Clubs in League System',
+            labels={'clubs_in_system': '# of Clubs', 'country_name': 'Country'},
+            color='total4',
+            color_continuous_scale='Oryel',
+            text='flag'
+        )
+        fig.update_traces(textposition='outside', textfont_size=20)
+        fig.update_layout(showlegend=False, height=500)
+        st.plotly_chart(fig, use_container_width=True)
+        
     with tab7:
         # Country Rankings Tab - Individual country club rankings
         st.markdown("## 🌍 Club Rankings by Country")
