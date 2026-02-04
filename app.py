@@ -692,7 +692,7 @@ try:
                             margin={"r":0,"t":0,"l":0,"b":0},
                             mapbox=dict(
                                 center=dict(lat=avg_lat, lon=avg_lon),
-                                zoom=3.2  # <--- Dieser Wert steuert die Nähe. 
+                                zoom=2.8  # <--- Dieser Wert steuert die Nähe. 
                                           # 3.2 ist ideal für das Gebiet Osteuropa/Zentralasien.
                                           # Größerer Wert = näher dran, kleinerer Wert = weiter weg.
                             )
