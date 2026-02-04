@@ -673,30 +673,40 @@ try:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
                         # --- DYNAMISCHE ZOOM-BERECHNUNG (KALIBRIERT) ---
+                        # --- DYNAMISCHE ZOOM-BERECHNUNG FÜR EXTREME DISTANZEN ---
                         lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
                         lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
                         
-                        # Die Ausdehnung in Grad
                         delta_lat = abs(lat_max - lat_min)
                         delta_lon = abs(lon_max - lon_min)
-                        max_bound = max(delta_lat, delta_lon)
                         
                         # Zentrum berechnen
                         center_lat = (lat_min + lat_max) / 2
                         center_lon = (lon_min + lon_max) / 2
                 
-                        # Zoom-Logik
-                        if len(map_data) > 1 and max_bound > 0:
-                            # Diese Formel ist für schmale Container (420px) optimiert
-                            # Je größer der erste Wert (11.5), desto näher der Zoom.
-                            # Wir nutzen np.log2, da Zoom-Stufen binär skalieren (2, 4, 8...)
-                            zoom_level = 11.5 - np.log2(max_bound * 111 / 25) 
+                        if len(map_data) > 1:
+                            # Das Problem bei 420px Breite ist die horizontale Ausdehnung (Längengrad)
+                            # Wir berechnen den Zoom basierend auf der Längengrad-Differenz.
+                            # 360 Grad / (2^Zoom) * Pixelbreite = Sichtbereich
                             
-                            # Begrenzung, damit es nicht zu extrem wird (z.B. bei Stadt-Derbys)
-                            zoom_level = min(max(zoom_level, 1.5), 10.0)
+                            # Formel für die Breite (Längengrad):
+                            # Zoom = log2(360 * Containerbreite / (Delta_Lon * 256))
+                            # Wir nutzen 420 als Containerbreite und 256 als Standard-Tile-Größe von Mapbox
+                            import math
+                            
+                            # Sicherheits-Puffer: Wir nehmen delta_lon * 1.2, damit die Punkte nicht am Rand kleben
+                            zoom_level = math.log2((360 * 420) / (max(delta_lon, 0.1) * 1.2 * 256))
+                            
+                            # Zusätzliche Absicherung für die Höhe: Falls die Nord-Süd-Ausdehnung größer ist
+                            zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * 1.2 * 256))
+                            
+                            # Der kleinere Zoom gewinnt (damit alles drauf passt)
+                            zoom_level = min(zoom_level, zoom_lat)
+                            
+                            # Limitierung auf sinnvolle Werte
+                            zoom_level = max(min(zoom_level, 10), 1.0)
                         else:
-                            # Einzelner Punkt: Ein angenehmer Zoom, um das Land zu sehen
-                            zoom_level = 4.0 
+                            zoom_level = 4.0
                 
                         # --- KARTE ERSTELLEN ---
                         fig = px.scatter_mapbox(
@@ -710,7 +720,7 @@ try:
                         
                         fig.update_layout(
                             mapbox_style="open-street-map",
-                            margin={"r":0,"t":0,"l":0,"b":0},
+                            margin={"r":5,"t":5,"l":5,"b":5},
                             mapbox=dict(
                                 center=dict(lat=center_lat, lon=center_lon),
                                 zoom=zoom_level
