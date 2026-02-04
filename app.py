@@ -671,35 +671,35 @@ try:
                     
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
+                        
+                        # Erstellung der Map OHNE festen Zoom im px-Aufruf
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=400 # Etwas höher für bessere Sichtbarkeit
+                            height=450
                         )
                         
-                        # Berechnung des Zentrums für besseren Fokus
-                        center_lat = map_data['lat'].mean()
-                        center_lon = map_data['lon'].mean()
-                
+                        # Layout anpassen
                         fig.update_layout(
                             mapbox_style="open-street-map",
-                            margin={"r":0,"t":0,"l":0,"b":0},
-                            mapbox=dict(
-                                center=dict(lat=center_lat, lon=center_lon),
-                                zoom=2.5  # Ein Wert zwischen 2 und 4 ist ideal für Eurasien
-                            )
+                            margin={"r":0,"t":0,"l":0,"b":0}
                         )
+                
+                        # Der Trick: Wir setzen die Grenzen (Bounds) explizit
+                        # Wir berechnen die äußeren Ecken deiner Datenpunkte
+                        padding = 1.5  # Ein kleiner Puffer in Grad, damit die Punkte nicht am Rand kleben
                         
-                        # WICHTIG: Dies erzwingt, dass die Karte sich an die Marker anpasst
-                        fig.update_mapboxes(bounds={
-                            "west": map_data['lon'].min() - 2, 
-                            "east": map_data['lon'].max() + 2, 
-                            "south": map_data['lat'].min() - 2, 
-                            "north": map_data['lat'].max() + 2
-                        })
+                        fig.update_mapboxes(
+                            bounds={
+                                "west": map_data['lon'].min() - padding,
+                                "east": map_data['lon'].max() + padding,
+                                "south": map_data['lat'].min() - padding,
+                                "north": map_data['lat'].max() + padding
+                            }
+                        )
                         
                         st.plotly_chart(fig, use_container_width=True)
                     else:
