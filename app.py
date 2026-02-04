@@ -672,34 +672,48 @@ try:
                     if not map_data.empty:
                         st.markdown(f"###### 📍 {league_name} Map")
                         
-                        # 1. Zentrum berechnen (Durchschnitt aller Koordinaten)
-                        avg_lat = map_data['lat'].mean()
-                        avg_lon = map_data['lon'].mean()
+                        # --- DYNAMISCHE ZOOM-BERECHNUNG ---
+                        lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
+                        lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
+                        
+                        # Berechne die maximale Ausdehnung in Grad
+                        max_bound = max(abs(lat_max - lat_min), abs(lon_max - lon_min))
+                        
+                        # Umrechnung in Kilometer (ca. 111km pro Grad)
+                        max_bound_km = max_bound * 111
+                        
+                        # Logarithmische Zoom-Formel
+                        # Wir nehmen 10.5 statt 11.5, da dein Container mit 420px sehr schmal ist
+                        # Das sorgt für etwas mehr "Puffer" um die Punkte
+                        if max_bound_km > 0:
+                            zoom_level = 10.5 - np.log10(max_bound_km) # np.log10 ist hier stabiler
+                        else:
+                            zoom_level = 5 # Standard für einen einzelnen Punkt
+                            
+                        # Zentrum berechnen
+                        center_lat = (lat_min + lat_max) / 2
+                        center_lon = (lon_min + lon_max) / 2
                 
-                        # 2. Karte erstellen
+                        # --- KARTE ERSTELLEN ---
                         fig = px.scatter_mapbox(
                             map_data,
                             lat="lat",
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            height=500 # Etwas höher für den "Europlan"-Look
+                            height=400
                         )
-                        fig.update_geos(fitbounds="locations")
-                        # 3. Das Layout fixieren (keine automatischen Bounds)
+                        
                         fig.update_layout(
                             mapbox_style="open-street-map",
                             margin={"r":0,"t":0,"l":0,"b":0},
                             mapbox=dict(
-                                center=dict(lat=avg_lat, lon=avg_lon),
-                                zoom=3.2  # <--- Dieser Wert steuert die Nähe. 
-                                          # 3.2 ist ideal für das Gebiet Osteuropa/Zentralasien.
-                                          # Größerer Wert = näher dran, kleinerer Wert = weiter weg.
+                                center=dict(lat=center_lat, lon=center_lon),
+                                zoom=zoom_level
                             )
                         )
                         
                         st.plotly_chart(fig, use_container_width=True)
-                        fig.update_geos(fitbounds="locations")
                     else:
                         st.info("Map view available once coordinates are stored in the CSV file.")
                 else:
