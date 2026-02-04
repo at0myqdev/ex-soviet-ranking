@@ -678,7 +678,6 @@ try:
                             lon="lon",
                             hover_name="team",
                             hover_data={"point_avg": ":.2f", "country_name": True, "lat": False, "lon": False},
-                            zoom=2,
                             height=300
                         )
                         fig.update_layout(
