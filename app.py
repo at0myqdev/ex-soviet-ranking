@@ -424,7 +424,7 @@ try:
             title='Nation Coefficients by Country',
             labels={'total4': 'Nation Coefficient', 'country_name': 'Country'},
             color='total4',
-            color_continuous_scale='Blues',
+            color_continuous_scale='Oryel',
             text='flag'
         )
         fig.update_traces(textposition='outside', textfont_size=20)
@@ -560,7 +560,7 @@ try:
             title='Top 15 Clubs by ClubCoef',
             labels={'point_avg': 'ClubCoef', 'team': 'Club'},
             color='point_avg',
-            color_continuous_scale='Reds',
+            color_continuous_scale='Oryel',
             text='flag',
             hover_data=['country_name']
         )
@@ -838,7 +838,7 @@ try:
                 y='Number of Clubs',
                 title=f'League Distribution - {country_name}',
                 color='Number of Clubs',
-                color_continuous_scale='Blues'
+                color_continuous_scale='Oryel'
             )
             fig.update_layout(showlegend=False, height=400)
             st.plotly_chart(fig, use_container_width=True)
@@ -854,7 +854,7 @@ try:
                 title=f'Top 10 Clubs - {country_name}',
                 labels={'point_avg': 'ClubCoef', 'team': 'Club'},
                 color='point_avg',
-                color_continuous_scale='Reds'
+                color_continuous_scale='Oryel'
             )
             fig.update_layout(showlegend=False, height=400)
             fig.update_xaxes(tickangle=-45)
