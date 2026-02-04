@@ -257,6 +257,8 @@ def generate_flag_bar(present_country_codes):
 
 # Load the data
 try:
+    st.cache_data.clear()
+    
     league_df = load_and_calculate_data()
     club_results_df, club_df = calculate_club_coefficients(league_df)
     
