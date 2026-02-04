@@ -708,40 +708,61 @@ try:
                         )
                         st.plotly_chart(fig_map, use_container_width=True)
     
-        # --- THIRD ROW: OVERALL DISTRIBUTION CHART ---
+    # --- THIRD ROW: OVERALL DISTRIBUTION CHART ---
         st.markdown("---")
         st.subheader("📊 Distribution of Clubs in the League System")
     
         # Data preparation for the summary bar chart
-        # Counting how many clubs per country are in the Top 92 system
         clubs_per_nation = all_clubs[all_clubs['overall_position'] <= 92]['country_name'].value_counts().reset_index()
         clubs_per_nation.columns = ['country_name', 'clubs_in_system']
     
-        # Clean up existing column to avoid Pandas 'Suffix Error' during re-runs
         if 'clubs_in_system' in league_df.columns:
             league_df = league_df.drop(columns=['clubs_in_system'])
         
-        # Merge count data into the main nation ranking dataframe
         league_df = league_df.merge(clubs_per_nation, on='country_name', how='left').fillna({'clubs_in_system': 0})
+        
+        # Sort data for a cleaner look
+        df_plot = league_df.sort_values('clubs_in_system', ascending=False)
     
-        # Generate the bar chart showing nation representation
+        # Create a combined label for the X-axis (Flag + Name)
+        df_plot['x_label'] = df_plot['flag'] + " " + df_plot['country_name']
+    
+        # Generate the bar chart
         fig_system = px.bar(
-            league_df.sort_values('clubs_in_system', ascending=False), 
-            x='flag', 
+            df_plot, 
+            x='x_label', 
             y='clubs_in_system',
-            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
+            labels={'clubs_in_system': 'Number of Clubs', 'x_label': 'Country'},
             color='clubs_in_system',
             color_continuous_scale='Oryel',
-            text='clubs_in_system' # Displays the nation's flag above each bar
+            # Set the text displayed ABOVE the bar to the actual count
+            text='clubs_in_system' 
         )
         
-        # Styling for the bar chart
-        fig_system.update_traces(textposition='outside', textfont_size=20)
+        # Configure the Hover and the Text position
+        fig_system.update_traces(
+            # Position the count strictly above the bar
+            textposition='outside', 
+            textfont_size=14,
+            # Define the custom hover order: Flag, Country, Count
+            # customdata[0] = flag, customdata[1] = country_name
+            customdata=df_plot[['flag', 'country_name']],
+            hovertemplate="<br>".join([
+                "%{customdata[0]}",        # Flag
+                "%{customdata[1]}",        # Country
+                "Count: %{y}",             # Number
+                "<extra></extra>"          # Removes the trace name box
+            ])
+        )
+        
         fig_system.update_layout(
             xaxis_tickangle=-45, 
-            height=500, 
+            height=600, 
             showlegend=False, 
-            xaxis_title=""
+            xaxis_title="",
+            yaxis_title="Number of Clubs",
+            # Adjust margin to ensure the labels and text fit
+            margin=dict(t=50) 
         )
         
         st.plotly_chart(fig_system, use_container_width=True)
