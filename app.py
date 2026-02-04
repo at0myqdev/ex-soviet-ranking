@@ -645,8 +645,6 @@ try:
                     }
                 )
     
-        st.markdown("---") # Trennlinie für die Optik
-    
         # --- ZWEITE ZEILE: DIE KARTEN ---
         map_cols = st.columns(4)
         
