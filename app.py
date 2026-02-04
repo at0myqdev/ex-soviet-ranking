@@ -709,25 +709,27 @@ try:
                 else:
                     st.info("Add data to 'lat' and 'lon' columns to the CSV to see a map here.")
 
-        # Changed metric as requested: "Clubs in League System"
-        # Now only counts clubs in the top 92 (Tier 1-4)
-        country_clubs = club_results_df[club_results_df['country_code'] == selected_country].copy()
-        country_clubs['national_rank'] = range(1, len(country_clubs) + 1)
-        clubs_in_system = len(country_clubs[country_clubs['overall_position'] <= 92])
-        st.metric("Clubs in League System", clubs_in_system)
+        st.subheader("📊 Distribution of Clubs in the League System")
 
+        # Grafik über die volle Breite
         fig = px.bar(
-            league_df, 
+            league_df.sort_values('clubs_in_system', ascending=False), 
             x='country_name', 
             y='clubs_in_system',
-            title='Clubs in League System',
-            labels={'clubs_in_system': '# of Clubs', 'country_name': 'Country'},
-            color='total4',
-            color_continuous_scale='Oryel',
+            title='Number of Clubs represented in Tiers 1-4',
+            labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
+            color='clubs_in_system',
+            color_continuous_scale='Viridis', # 'Oryel' ist kein Standard-Name, Viridis oder Blues sieht gut aus
             text='flag'
         )
+        
         fig.update_traces(textposition='outside', textfont_size=20)
-        fig.update_layout(showlegend=False, height=500)
+        fig.update_layout(
+            xaxis_tickangle=-45,
+            height=500,
+            showlegend=False
+        )
+        
         st.plotly_chart(fig, use_container_width=True)
         
     with tab7:
