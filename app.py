@@ -620,6 +620,13 @@ try:
                 display = tier_display[['league_pos', 'flag', 'team', 'point_avg']].copy()
                 display.columns = ['Pos', '🏴', 'Club', 'Coef']
                 display['Coef'] = display['Coef'].apply(lambda x: f"{x:.2f}")
+
+                # Berechne die Anzahl der Clubs im System pro Land für die Grafik
+                clubs_per_nation = all_clubs[all_clubs['overall_position'] <= 92]['country_name'].value_counts().reset_index()
+                clubs_per_nation.columns = ['country_name', 'clubs_in_system']
+                
+                # Merge diese Information in das league_df, damit wir Zugriff auf Flags und Koeffizienten haben
+                league_df = league_df.merge(clubs_per_nation, on='country_name', how='left').fillna(0)
                 
                 # Promotion/Relegation Status
                 display['Status'] = ''
@@ -719,7 +726,7 @@ try:
             title='Number of Clubs represented in Tiers 1-4',
             labels={'clubs_in_system': 'Number of Clubs', 'country_name': 'Country'},
             color='clubs_in_system',
-            color_continuous_scale='Viridis', # 'Oryel' ist kein Standard-Name, Viridis oder Blues sieht gut aus
+            color_continuous_scale='Oryel',
             text='flag'
         )
         
