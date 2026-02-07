@@ -119,14 +119,18 @@ def calculate_zoom(lat_min, lat_max, lon_min, lon_max):
     delta_lat = abs(lat_max - lat_min)
     delta_lon = abs(lon_max - lon_min)
     
-    # Calibrated zoom logic
-    padding_factor = 1.5 
-    zoom_lon = math.log2((360 * 2.0) / (max(delta_lon, 0.01) * padding_factor))
-    zoom_lat = math.log2((180 * 2.0) / (max(delta_lat, 0.01) * padding_factor))
+    # Wir nutzen hier den padding_factor 2.0 aus deinem Snippet, 
+    # damit die Karte nicht zu nah rangezoomt ist.
+    padding_factor = 2.0 
     
-    # Default to 4.0 if single point or error, max 10 to avoid too close
-    zoom = min(min(zoom_lon, zoom_lat), 10)
-    return max(zoom, 1.0) # Prevent negative zoom
+    # Formel angepasst an dein Snippet (basierend auf typischer Container-Breite)
+    # 380px und 450px sind Annäherungswerte für die Kartengröße im 4-Spalten-Layout
+    zoom_lon = math.log2((360 * 380) / (max(delta_lon, 0.1) * padding_factor * 256))
+    zoom_lat = math.log2((180 * 450) / (max(delta_lat, 0.1) * padding_factor * 256))
+    
+    # Zoom begrenzen (min 1, max 10)
+    zoom = max(min(min(zoom_lon, zoom_lat), 10), 1.0)
+    return zoom
 
 def apply_jitter(df, lat_col='lat', lon_col='lon', threshold=0.0005, radius=0.00009):
     """
@@ -568,28 +572,45 @@ try:
         map_cols = st.columns(4)
         for idx, (league_df_tier, league_name, tier) in enumerate(tiers_data):
             with map_cols[idx]:
+                # Wir filtern hier auf lat/lon. Da wir "Jittering" schon angewendet haben,
+                # sind die Koordinaten für überlappende Vereine bereits korrigiert.
                 map_data = league_df_tier.dropna(subset=['lat', 'lon'])
+                
                 if not map_data.empty:
                     st.markdown(f"###### 📍 {league_name} Map")
                     
-                    # Zoom Calc
+                    # Zoom Berechnung mit der neuen Funktion (Faktor 2.0)
                     lat_min, lat_max = map_data['lat'].min(), map_data['lat'].max()
                     lon_min, lon_max = map_data['lon'].min(), map_data['lon'].max()
                     center_lat, center_lon = (lat_min + lat_max) / 2, (lon_min + lon_max) / 2
+                    
+                    # Hier wird die angepasste Funktion aufgerufen
                     zoom_level = calculate_zoom(lat_min, lat_max, lon_min, lon_max)
 
                     # Plot
                     fig_map = px.scatter_mapbox(
-                        map_data, lat="lat", lon="lon", hover_name="team",
-                        hover_data={"flag": True, "point_avg": True, "league_tier_name": True, "lat": False, "lon": False},
+                        map_data, 
+                        lat="lat", lon="lon", 
+                        hover_name="team",
+                        # WICHTIG: Hier behalten wir die neuen Infos (League Name, Coef)
+                        hover_data={
+                            "flag": True, 
+                            "point_avg": True, 
+                            "league_tier_name": True, 
+                            "lat": False, "lon": False
+                        },
                         height=450
                     )
+                    
                     fig_map.update_traces(
                         marker=dict(size=15, color='#0068c9', opacity=0.75),
+                        # Das verbesserte Hover-Template
                         hovertemplate="<b>%{hovertext}</b><br><br>%{customdata[0]}<br>🏆 %{customdata[2]}<br>Coef: %{customdata[1]:.4f}<extra></extra>"
                     )
+                    
                     fig_map.update_layout(
-                        mapbox_style="open-street-map", margin={"r":5,"t":5,"l":5,"b":5},
+                        mapbox_style="open-street-map", 
+                        margin={"r":5,"t":5,"l":5,"b":5},
                         mapbox=dict(center=dict(lat=center_lat, lon=center_lon), zoom=zoom_level)
                     )
                     st.plotly_chart(fig_map, use_container_width=True)
