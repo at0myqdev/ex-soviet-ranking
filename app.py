@@ -121,7 +121,7 @@ def calculate_zoom(lat_min, lat_max, lon_min, lon_max):
     
     # Wir nutzen hier den padding_factor 2.0 aus deinem Snippet, 
     # damit die Karte nicht zu nah rangezoomt ist.
-    padding_factor = 2.0 
+    padding_factor = 1.8
     
     # Formel angepasst an dein Snippet (basierend auf typischer Container-Breite)
     # 380px und 450px sind Annäherungswerte für die Kartengröße im 4-Spalten-Layout
