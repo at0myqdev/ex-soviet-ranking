@@ -128,6 +128,81 @@ def calculate_zoom(lat_min, lat_max, lon_min, lon_max):
     zoom = min(min(zoom_lon, zoom_lat), 10)
     return max(zoom, 1.0) # Prevent negative zoom
 
+def apply_jitter(df, lat_col='lat', lon_col='lon', threshold=0.0005, radius=0.00009):
+    """
+    Identifies points closer than 'threshold' degrees (~50m) and jitters them
+    in a circle of 'radius' degrees (~10m).
+    """
+    df = df.copy()
+    if df.empty:
+        return df
+
+    # Arrays for faster access
+    lats = df[lat_col].values
+    lons = df[lon_col].values
+    ids = df.index.values
+    
+    # To keep track of processed points
+    assigned = np.zeros(len(df), dtype=bool)
+
+    # Simple clustering
+    for i in range(len(df)):
+        if assigned[i]:
+            continue
+
+        # Start a new cluster with point i
+        assigned[i] = True
+        members = [i]
+        
+        # Current point coordinates
+        lat_i = lats[i]
+        lon_i = lons[i]
+
+        # Find neighbors
+        for j in range(i + 1, len(df)):
+            if not assigned[j]:
+                # Euclidean distance on coordinates (approx)
+                # Correct longitude for latitude shrinking
+                d_lat = lats[j] - lat_i
+                d_lon = (lons[j] - lon_i) * np.cos(np.radians(lat_i))
+                dist = np.sqrt(d_lat**2 + d_lon**2)
+
+                if dist < threshold:
+                    assigned[j] = True
+                    members.append(j)
+
+        # Apply jitter if we found a group
+        n_members = len(members)
+        if n_members > 1:
+            # Calculate centroid of the group to ensure we stay centered
+            center_lat = np.mean(lats[members])
+            center_lon = np.mean(lons[members])
+
+            for k, member_idx in enumerate(members):
+                # Distribute evenly on a circle
+                angle = 2 * np.pi * k / n_members
+                
+                # Calculate offsets
+                # Lat offset: just radius * cos(angle)
+                df.at[ids[member_idx], lat_col] = center_lat + radius * np.cos(angle)
+                
+                # Lon offset: radius * sin(angle) / cos(lat) to account for earth curvature
+                df.at[ids[member_idx], lon_col] = center_lon + (radius * np.sin(angle)) / np.cos(np.radians(center_lat))
+    
+    return df
+
+def generate_flag_bar(present_country_codes):
+    all_codes = sorted(list(FLAG_EMOJI.keys()))
+    html = "<div style='display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;'>"
+    for code in all_codes:
+        flag = FLAG_EMOJI[code]
+        if code in present_country_codes:
+            html += f"<span style='opacity: 1.0; font-size: 1.2rem; cursor: help;' title='{COUNTRY_NAMES[code]}'>{flag}</span>"
+        else:
+            html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented: {COUNTRY_NAMES[code]}'>{flag}</span>"
+    html += "</div>"
+    return html
+
 # --- DATA LOADING ---
 
 @st.cache_data(ttl=0)
@@ -253,19 +328,13 @@ def calculate_club_coefficients(league_df):
     club_results_df['country_name'] = club_results_df['country_code'].map(COUNTRY_NAMES)
     club_results_df['flag'] = club_results_df['country_code'].map(FLAG_EMOJI)
     
-    return club_results_df, club_df
+    # --- APPLY JITTER HERE ---
+    # Apply jitter to coordinates for visualization purposes
+    # Groups points within ~50m and spreads them in a ~10m radius
+    if 'lat' in club_results_df.columns and 'lon' in club_results_df.columns:
+        club_results_df = apply_jitter(club_results_df)
 
-def generate_flag_bar(present_country_codes):
-    all_codes = sorted(list(FLAG_EMOJI.keys()))
-    html = "<div style='display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;'>"
-    for code in all_codes:
-        flag = FLAG_EMOJI[code]
-        if code in present_country_codes:
-            html += f"<span style='opacity: 1.0; font-size: 1.2rem; cursor: help;' title='{COUNTRY_NAMES[code]}'>{flag}</span>"
-        else:
-            html += f"<span style='opacity: 0.2; filter: grayscale(100%); font-size: 1.2rem; cursor: help;' title='Not represented: {COUNTRY_NAMES[code]}'>{flag}</span>"
-    html += "</div>"
-    return html
+    return club_results_df, club_df
 
 # --- MAIN APP ---
 
@@ -339,7 +408,6 @@ try:
     # 4. VISUALIZATIONS
     st.header("📈 Visualizations")
     
-    # Added "Global Map" as the new first tab (or last, depending on preference. Put first for visibility).
     tabs = st.tabs([
         "🗺️ Global Map",
         "Nation Coefficients", 
@@ -354,19 +422,15 @@ try:
     # TAB: GLOBAL MAP
     with tabs[0]:
         st.markdown("### 🗺️ Map of All Ex-Soviet Clubs")
-        st.markdown("Locations of all clubs in the database.")
+        st.markdown("Locations of all clubs in the database. Clubs sharing a stadium are slightly offset for visibility.")
         
         map_all_clubs = club_results_df.dropna(subset=['lat', 'lon']).copy()
         
         if not map_all_clubs.empty:
-            # Create hover text column for cleaner Mapbox display
-            # Customdata: 0=Flag, 1=Country, 2=League Name, 3=Coef
-            
             fig_global = px.scatter_mapbox(
                 map_all_clubs,
                 lat="lat", lon="lon",
                 hover_name="team",
-                # We use custom_data to pass the extra info to the template
                 hover_data={
                     "flag": True, 
                     "country_name": True,
@@ -374,7 +438,7 @@ try:
                     "point_avg": True,
                     "lat": False, "lon": False
                 },
-                color_discrete_sequence=["#0068c9"], # Single blue color
+                color_discrete_sequence=["#0068c9"],
                 zoom=2.5,
                 height=600
             )
@@ -392,7 +456,6 @@ try:
             fig_global.update_layout(
                 mapbox_style="open-street-map",
                 margin={"r":0,"t":0,"l":0,"b":0},
-                # Center roughly on the region
                 mapbox=dict(center=dict(lat=50, lon=60))
             )
             
@@ -602,7 +665,7 @@ try:
 
         st.markdown("---")
         
-        # Metrics & Tables (Existing)
+        # Metrics & Tables
         nation_coef = league_df[league_df['country_code'] == selected_country]['total4'].values[0] if len(league_df[league_df['country_code'] == selected_country]) > 0 else 0
         clubs_in_system = len(country_clubs[country_clubs['overall_position'] <= 92])
         
